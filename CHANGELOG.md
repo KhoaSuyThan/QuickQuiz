@@ -5,6 +5,21 @@ Tất cả các thay đổi đáng chú ý của dự án FastQuiz sẽ được
 
 Phiên bản mới nhất sẽ luôn được cập nhật tự động lên đầu file.
 ---
+## [1.0.7] - 2026-11-09
+
+### Tích hợp Prompt Mẫu Cho AI & Nút Sao Chép 1-Click
+- **Trợ lý Prompt mẫu thông minh:** Bổ sung hộp gợi ý Prompt mẫu chuẩn cấu trúc QuickQuiz tại trang tạo đề (`components/Uploader.tsx`), hướng dẫn AI (ChatGPT, Claude, Gemini, DeepSeek) tạo câu hỏi có đánh dấu `*` ở đáp án đúng, có lời giải thích và đúng số lượng lựa chọn.
+- **Nút Sao chép Prompt tiện lợi:** Tích hợp nút "Sao chép Prompt" với visual feedback tự động đổi trạng thái sang "Đã sao chép!" trong 2 giây, hỗ trợ clipboard API an toàn.
+- **Tùy chọn Xem / Thu gọn linh hoạt:** Người dùng có thể click xem trước toàn bộ nội dung Prompt hoặc thu gọn để không gian nhập liệu luôn gọn gàng.
+- **Khắc phục xung đột Favicon Next.js:** Loại bỏ tệp `public/icon.svg` trùng lặp để Next.js App Router ưu tiên `app/icon.svg` tối ưu.
+
+## [1.0.6] - 2026-11-09
+
+### Bổ sung Favicon & Bộ nhận diện thương hiệu cho dự án
+- **Thiết kế icon vector sắc nét (`app/icon.svg` & `public/icon.svg`):** Đồng bộ hoàn hảo với logo trên thanh Navbar (nền gradient xanh dương `#2563eb` sang tím indigo `#4f46e5`, bo góc squircle bo tròn và biểu tượng tia sét Zap màu trắng nổi bật). Tự động tương thích màn hình Retina và dark/light mode.
+- **Tạo tệp Favicon đa kích thước (`public/favicon.ico` & `app/favicon.ico`):** Sinh file `.ico` chuẩn chứa 3 kích thước 16x16, 32x32, 48x48 phục vụ các trình duyệt legacy, bookmark bar và các bot tìm kiếm.
+- **Cấu hình Metadata trong `app/layout.tsx`:** Tích hợp cấu hình `icons` vào Next.js App Router metadata hỗ trợ đầy đủ `icon`, `shortcut`, và `apple-touch-icon`.
+
 ## [1.0.5] - 2026-11-09
 
 ### Bổ sung ngân hàng câu hỏi Phỏng Vấn Mobile Software Engineer (130 câu)

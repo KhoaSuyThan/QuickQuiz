@@ -5,6 +5,15 @@ import Navbar from "@/components/Navbar";
 export const metadata: Metadata = {
   title: "QuickQuiz - Nền Tảng Trắc Nghiệm Tức Thì & Chia Sẻ Đề Thi",
   description: "Tải lên, làm trắc nghiệm với instant feedback, xáo trộn câu hỏi và đáp án, lưu trữ thông minh với PostgreSQL & IndexedDB.",
+  // Cấu hình favicon vector SVG sắc nét và icon fallback cho đa nền tảng
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "any" },
+    ],
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

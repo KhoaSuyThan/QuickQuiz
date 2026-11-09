@@ -2,7 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UploadCloud, FileText, CheckCircle2, AlertTriangle, ArrowRight, Loader2, Sparkles } from "lucide-react";
+import { 
+  UploadCloud, 
+  FileText, 
+  CheckCircle2, 
+  AlertTriangle, 
+  ArrowRight, 
+  Loader2, 
+  Sparkles,
+  Bot,
+  Copy,
+  Check,
+  ChevronDown,
+  ChevronUp
+} from "lucide-react";
 import { parseRawText, parseCSV, parseExcel } from "@/lib/parser";
 import { QuizQuestion } from "@/lib/types";
 import { saveLocalQuiz } from "@/lib/storage";
@@ -14,6 +27,32 @@ B. Đà Nẵng
 C. TP. Hồ Chí Minh
 D. Cần Thơ
 Giải thích: Hà Nội là thủ đô của nước Cộng hòa Xã hội Chủ nghĩa Việt Nam.`;
+
+// Mẫu câu lệnh Prompt chuẩn giúp AI (ChatGPT, Claude, Gemini, DeepSeek) sinh đề tương thích 100% QuickQuiz
+const AI_PROMPT_TEMPLATE = `Hãy tạo giúp tôi [số lượng, VD: 10] câu hỏi trắc nghiệm về chủ đề "[Chủ đề hoặc dán tài liệu vào đây]" theo đúng định dạng chuẩn của phần mềm QuickQuiz dưới đây:
+
+Quy tắc định dạng bắt buộc:
+1. Mỗi câu hỏi bắt đầu bằng: "Câu X: [Nội dung câu hỏi]"
+2. Mỗi câu có 4 đáp án A, B, C, D (hoặc từ 3-6 đáp án).
+3. ĐÁP ÁN ĐÚNG PHẢI CÓ DẤU SAO (*) Ở ĐẦU DÒNG (Ví dụ: *A. Nội dung đáp án đúng). Các đáp án sai KHÔNG có dấu sao (Ví dụ: B. Đáp án sai).
+4. Luôn có dòng "Giải thích: [Nội dung giải thích chi tiết]" ở cuối mỗi câu.
+5. Mỗi câu hỏi cách nhau bởi đúng 1 dòng trống.
+
+Ví dụ mẫu chuẩn:
+Câu 1: Thủ đô của Việt Nam là gì?
+*A. Hà Nội
+B. Đà Nẵng
+C. TP. Hồ Chí Minh
+D. Cần Thơ
+Giải thích: Hà Nội là thủ đô của nước Cộng hòa Xã hội Chủ nghĩa Việt Nam.
+
+Câu 2: Đâu không phải là ngôn ngữ lập trình hướng đối tượng thuần túy?
+A. Java
+B. C#
+*C. C thuần túy
+D. Python
+Giải thích: Ngôn ngữ C là ngôn ngữ lập trình thủ tục, không hỗ trợ nguyên bản tính chất hướng đối tượng (OOP).`;
+
 
 export default function Uploader() {
   const router = useRouter();
@@ -27,6 +66,30 @@ export default function Uploader() {
   const [isParsing, setIsParsing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+
+  // Trạng thái sao chép và xem trước Prompt mẫu cho AI
+  const [copiedPrompt, setCopiedPrompt] = useState(false);
+  const [showPromptDetails, setShowPromptDetails] = useState(false);
+
+  // Xử lý sao chép Prompt chuẩn hỗ trợ đa nền tảng trình duyệt
+  const handleCopyPrompt = async () => {
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(AI_PROMPT_TEMPLATE);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = AI_PROMPT_TEMPLATE;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+      setCopiedPrompt(true);
+      setTimeout(() => setCopiedPrompt(false), 2000);
+    } catch (err) {
+      console.error("Lỗi khi sao chép prompt cho AI:", err);
+    }
+  };
 
   // Xử lý phân tích Text trực tiếp khi người dùng chỉnh sửa
   const handleParseText = (text: string) => {
@@ -226,7 +289,75 @@ export default function Uploader() {
 
         {/* Nội dung Tab Text */}
         {activeTab === "text" && (
-          <div className="space-y-2">
+          <div className="space-y-3.5">
+            {/* Khung gợi ý Prompt mẫu cho AI (ChatGPT, Claude, Gemini, DeepSeek) */}
+            <div className="bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-purple-50/80 dark:from-blue-950/40 dark:via-indigo-950/30 dark:to-purple-950/30 border border-blue-200/80 dark:border-blue-800/60 rounded-xl p-3.5 shadow-xs transition-all">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-start sm:items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shrink-0 shadow-sm shadow-blue-500/20">
+                    <Bot className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                        Prompt Mẫu Cho AI (ChatGPT, Claude, Gemini)
+                      </span>
+                      <span className="text-[10px] font-semibold bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full">
+                        Chuẩn 100% cú pháp
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                      Sao chép prompt này gửi cho AI để sinh ngay danh sách câu hỏi nạp trực tiếp vào QuickQuiz.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setShowPromptDetails(!showPromptDetails)}
+                    className="flex items-center gap-1 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 px-2.5 py-1.5 rounded-lg hover:bg-white/60 dark:hover:bg-slate-800/60 transition-colors"
+                  >
+                    <span>{showPromptDetails ? "Thu gọn" : "Xem prompt"}</span>
+                    {showPromptDetails ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyPrompt}
+                    className={`flex items-center gap-1.5 text-xs font-bold px-3.5 py-1.5 rounded-lg shadow-sm transition-all duration-200 ${
+                      copiedPrompt
+                        ? "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/30 scale-102"
+                        : "bg-blue-600 hover:bg-blue-700 active:scale-98 text-white shadow-blue-500/30"
+                    }`}
+                  >
+                    {copiedPrompt ? (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Đã sao chép!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Sao chép Prompt</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Khung nội dung chi tiết Prompt khi bấm xem */}
+              {showPromptDetails && (
+                <div className="mt-3 pt-3 border-t border-blue-200/60 dark:border-blue-900/50 space-y-2">
+                  <div className="relative">
+                    <pre className="text-[11px] font-mono bg-white dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-slate-700 dark:text-slate-300 whitespace-pre-wrap max-h-48 overflow-y-auto leading-relaxed select-all">
+                      {AI_PROMPT_TEMPLATE}
+                    </pre>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <p className="text-xs text-slate-500 dark:text-slate-400">
               💡 Quy tắc: Đặt dấu <span className="font-bold text-blue-600">*</span> ở đầu đáp án đúng (VD: <code>*A. Hà Nội</code>). Mỗi câu có 3-6 đáp án và các câu cách nhau bởi một dòng trống.
             </p>
