@@ -1,0 +1,909 @@
+Câu 1: Vòng đời của một Android Activity khi người dùng mở ứng dụng, sau đó có một cuộc gọi điện thoại đến chiếm một phần màn hình (dưới dạng Dialog), rồi người dùng tắt cuộc gọi để quay lại sẽ diễn ra theo thứ tự nào?
+*A. onCreate() -> onStart() -> onResume() -> onPause() -> onResume()
+B. onCreate() -> onStart() -> onResume() -> onStop() -> onRestart() -> onStart() -> onResume()
+C. onCreate() -> onResume() -> onPause() -> onStop() -> onDestroy()
+D. onStart() -> onResume() -> onStop() -> onResume()
+Giải thích: Khi Activity vẫn còn nhìn thấy một phần (bị che bởi một Dialog hoặc Activity dạng bán trong suốt), nó chỉ chuyển sang trạng thái onPause() chứ chưa bị onStop(). Khi Dialog đóng, Activity gọi lại onResume().
+
+Câu 2: Trong iOS, cơ chế quản lý bộ nhớ ARC (Automatic Reference Counting) giải quyết vấn đề gì và nguy cơ lớn nhất gây ra rò rỉ bộ nhớ (Memory Leak) là gì?
+*A. Tự động đếm số lượng tham chiếu mạnh (strong references); nguy cơ lớn nhất là vòng lặp giữ tham chiếu (Retain Cycle) giữa các đối tượng
+B. Tự động dọn rác bằng thuật toán Mark and Sweep trong thời gian chạy
+C. Quản lý bộ nhớ thủ công bằng retain và release
+D. Giới hạn dung lượng RAM của ứng dụng tối đa 50MB
+Giải thích: ARC tự động chèn các lệnh retain/release lúc biên dịch. Retain cycle xảy ra khi 2 đối tượng giữ tham chiếu strong lẫn nhau (ví dụ: Closure giữ strong self và đối tượng giữ closure), khắc phục bằng weak hoặc unowned.
+
+Câu 3: Trong Flutter, cây phần tử (Element Tree) đóng vai trò gì trong kiến trúc 3 cây (Widget Tree, Element Tree, RenderObject Tree)?
+*A. Là cầu nối quản lý vòng đời (lifecycle), liên kết Widget bất biến (immutable) với RenderObject tương ứng và điều phối việc cập nhật giao diện
+B. Là nơi trực tiếp tính toán tọa độ và vẽ các pixel lên màn hình
+C. Chỉ dùng để chứa dữ liệu JSON từ API
+D. Là cây duy nhất tồn tại trong bộ nhớ RAM của Flutter
+Giải thích: Widget là cấu hình bất biến (blueprints). RenderObject trực tiếp vẽ và tính toán layout. Element Tree là cây sống liên kết giữa hai cây trên, quyết định khi nào cần tái sử dụng RenderObject cũ để tối ưu hiệu năng.
+
+Câu 4: Điểm khác biệt cốt lõi nhất giữa kiến trúc Fabric mới của React Native và kiến trúc Bridge cũ là gì?
+*A. Fabric sử dụng JSI (JavaScript Interface) cho phép JavaScript gọi trực tiếp các phương thức C++/Native đồng bộ không qua hàng đợi JSON serialized của Bridge
+B. Fabric sử dụng WebView để render giao diện
+C. Fabric loại bỏ hoàn toàn ngôn ngữ JavaScript và thay bằng Kotlin
+D. Fabric chỉ hỗ trợ hệ điều hành iOS
+Giải thích: Kiến trúc cũ dùng Bridge tuần tự hóa dữ liệu JSON không đồng bộ gây nghẽn cổ chai (bottleneck). Kiến trúc mới dùng JSI (JavaScript Interface) cho phép giao tiếp trực tiếp C++ shared memory, hỗ trợ cả đồng bộ và không đồng bộ mượt mà.
+
+Câu 5: Trong Kotlin Coroutines, điểm khác biệt giữa Dispatchers.IO và Dispatchers.Default là gì?
+*A. Dispatchers.IO tối ưu cho các tác vụ I/O chặn (đọc ghi file, gọi mạng, database); Dispatchers.Default tối ưu cho các tác vụ tính toán CPU chuyên sâu (CPU-bound)
+B. Dispatchers.IO chạy trên Main Thread; Dispatchers.Default chạy trên Background Thread
+C. Dispatchers.IO giới hạn tối đa 2 luồng; Dispatchers.Default không giới hạn luồng
+D. Hai Dispatcher này hoàn toàn giống nhau
+Giải thích: Dispatchers.Default sử dụng Thread Pool có số lượng luồng bằng số nhân CPU (tối thiểu 2), phù hợp tính toán thuật toán, parse JSON nặng. Dispatchers.IO có Thread Pool đàn hồi mở rộng đến 64 luồng để chờ phản hồi từ ổ đĩa/mạng.
+
+Câu 6: Trong Swift, từ khóa 'weak' và 'unowned' khác nhau như thế nào khi phá vỡ Retain Cycle?
+*A. 'weak' luôn là kiểu Optional và tự động chuyển thành nil khi đối tượng bị giải phóng; 'unowned' là non-optional và sẽ gây crash (runtime exception) nếu truy cập khi đối tượng đã chết
+B. 'weak' làm tăng biến đếm tham chiếu; 'unowned' không làm tăng
+C. 'weak' chỉ dùng cho struct; 'unowned' chỉ dùng cho class
+D. 'unowned' tự động chuyển thành nil khi đối tượng bị giải phóng
+Giải thích: weak reference là zeroing-weak reference (tự gán nil khi đối tượng bị deallocate, nên bắt buộc là var Optional). unowned giả định đối tượng luôn tồn tại suốt vòng đời của đối tượng giữ nó, nếu đối tượng chết mà vẫn truy cập sẽ văng crash EXC_BAD_ACCESS.
+
+Câu 7: Trong kiến trúc Clean Architecture cho ứng dụng di động, quy tắc phụ thuộc (Dependency Rule) quy định luồng phụ thuộc giữa các tầng như thế nào?
+*A. Các tầng bên ngoài (Presentation, Data) luôn phụ thuộc vào tầng bên trong (Domain); tầng Domain hoàn toàn độc lập với Framework và UI
+B. Tầng Domain phụ thuộc trực tiếp vào Retrofit và Room Database
+C. Tầng Presentation gọi trực tiếp API không thông qua Domain hay Data
+D. Các tầng phụ thuộc lẫn nhau theo vòng tròn khép kín
+Giải thích: Domain Layer là trái tim của Clean Architecture, chứa Entities và UseCases/Interactors. Mọi phụ thuộc mã nguồn phải trỏ vào trong, Domain không được biết gì về Flutter, Android SDK, iOS UIKit hay database cụ thể.
+
+Câu 8: Khái niệm "Method Swizzling" trong Objective-C / iOS Runtime là gì?
+*A. Kỹ thuật tráo đổi con trỏ thực thi (IMP) của hai Selector (method) trong thời gian chạy (runtime), thường dùng cho Analytics hoặc AOP
+B. Kỹ thuật nén hình ảnh trước khi lưu vào CoreData
+C. Kỹ thuật mã hóa chuỗi kết nối API
+D. Cơ chế tự động giải phóng bộ nhớ của iOS
+Giải thích: Method Swizzling tận dụng dynamic dispatch của Objective-C runtime để thay đổi ánh xạ selector -> implementation, cho phép chèn code log, analytics hoặc can thiệp vào hành vi mặc định của hệ thống mà không cần sửa class gốc.
+
+Câu 9: Trong Flutter, hàm setState() thực chất thực hiện hành động gì ở cấp độ thấp?
+*A. Đánh dấu Element tương ứng là 'dirty' và đưa vào danh sách cần dựng lại (rebuild) ở khung hình tiếp theo của BuildOwner
+B. Vẽ lại ngay lập tức toàn bộ cây Widget của ứng dụng
+C. Gọi trực tiếp hàm main() chạy lại
+D. Xóa widget đó khỏi bộ nhớ RAM
+Giải thích: setState() gọi element.markNeedsBuild(), biến element thành dirty. Flutter engine tập hợp các dirty elements và lên lịch rebuild đồng loạt ở lượt vẽ khung hình (VSYNC) tiếp theo để tối ưu 60/120fps.
+
+Câu 10: Vấn đề "ANR" (Application Not Responding) trong Android xảy ra khi nào và ngưỡng thời gian kích hoạt là bao lâu đối với tương tác người dùng?
+*A. Khi Main Thread (UI Thread) bị chặn (block) quá 5 giây đối với sự kiện chạm phím/cảm ứng, hoặc BroadcastReceiver chạy quá 10 giây
+B. Khi ứng dụng dùng quá 1GB bộ nhớ RAM
+C. Khi ứng dụng mất kết nối mạng quá 30 giây
+D. Khi pin thiết bị xuống dưới 10%
+Giải thích: Android kích hoạt hộp thoại ANR khi Main Thread bận thực thi tác vụ nặng (như truy vấn DB, gọi API đồng bộ) khiến hệ thống không thể xử lý sự kiện tương tác Input/Touch trong vòng 5 giây.
+
+Câu 11: Kỹ thuật "SSL Pinning" (Certificate/Public Key Pinning) trên ứng dụng di động nhằm ngăn chặn cuộc tấn công mạng nào?
+*A. Tấn công giả mạo đứng giữa (Man-In-The-Middle - MITM) bằng chứng chỉ CA cài cắm trên thiết bị
+B. Tấn công từ chối dịch vụ phân tán (DDoS)
+C. Tấn công SQL Injection vào SQLite
+D. Tấn công Cross-Site Scripting (XSS)
+Giải thích: SSL Pinning ghim trực tiếp chứng chỉ hoặc Public Key băm (SHA256) của máy chủ vào ứng dụng, ngăn chặn việc kẻ tấn công cài chứng chỉ gốc giả mạo (Root CA) vào máy để xem trộm/sửa đổi gói tin HTTPS.
+
+Câu 12: Khi người dùng xoay ngang màn hình điện thoại, hành vi mặc định của hệ điều hành Android đối với Activity là gì?
+*A. Hủy hoàn toàn Activity hiện tại (onDestroy) và khởi tạo lại Activity mới (onCreate) theo cấu hình mới
+B. Chỉ thay đổi kích thước View mà không ảnh hưởng đến Activity
+C. Tự động tạm dừng ứng dụng và đưa vào nền
+D. Khóa màn hình lại
+Giải thích: Xoay màn hình là một Configuration Change. Theo mặc định, Android sẽ hủy và tạo mới Activity để nạp lại tài nguyên (layout, string, drawable) tương ứng với cấu hình màn hình mới. ViewModel ra đời để sống sót qua sự kiện này.
+
+Câu 13: Trong ViewModel của Android Architecture Components, cơ chế nào giúp dữ liệu không bị mất khi Activity bị hủy do xoay màn hình?
+*A. ViewModelStoreOwner giữ lại thể hiện ViewModel trong ViewModelStore cho đến khi Activity thực sự kết thúc hoàn toàn (isFinishing = true)
+B. ViewModel tự động lưu dữ liệu xuống file SQLite
+C. ViewModel chuyển dữ liệu lên Cloud Server
+D. ViewModel đóng băng luồng UI
+Giải thích: ViewModel được quản lý bởi ViewModelStore của Activity/Fragment. Khi chỉ là Configuration Change (xoay màn hình), ViewModel không bị hủy, và Activity mới tạo ra sẽ gắn lại vào ViewModel cũ.
+
+Câu 14: Trong Dart / Flutter, Isolate khác gì so với Thread thông thường trong Java/C++?
+*A. Các Isolate hoàn toàn không chia sẻ bộ nhớ (No Shared Memory) với nhau, giao tiếp duy nhất thông qua truyền thông điệp (Port / Message Passing)
+B. Isolate chia sẻ chung một vùng nhớ heap
+C. Isolate chỉ chạy được trên 1 nhân CPU duy nhất
+D. Isolate không thể thực hiện tính toán song song
+Giải thích: Dart là môi trường single-threaded per isolate. Khác với Java Threads dùng chung bộ nhớ (dẫn đến race condition, deadlock), Dart Isolates có heap độc lập và chỉ nói chuyện qua SendPort/ReceivePort, loại bỏ hoàn toàn nhu cầu dùng Mutex/Lock.
+
+Câu 15: Tại sao trong danh sách dài vô tận (Infinite List) trên mobile, việc sử dụng ListView.builder / RecyclerView / UICollectionView lại bắt buộc thay vì dùng Column/ScrollView chứa toàn bộ items?
+*A. Cơ chế View Recycling (tái sử dụng View): Chỉ cấp phát bộ nhớ và render các item đang hiển thị trên viewport màn hình, giúp RAM không bị bùng nổ (OOM)
+B. Vì ScrollView không hỗ trợ hiệu ứng cuộn mượt
+C. Vì Column chỉ chứa được tối đa 10 phần tử
+D. Để tự động sắp xếp danh sách theo bảng chữ cái
+Giải thích: ViewHolder pattern và View Recycling tái sử dụng các ô giao diện đã cuộn ra khỏi tầm nhìn để nạp dữ liệu mới, giữ mức tiêu thụ RAM không đổi dù danh sách có 100 hay 100,000 phần tử.
+
+Câu 16: Trong Kotlin, điểm khác nhau cơ bản giữa val và const val là gì?
+*A. 'const val' là hằng số lúc biên dịch (compile-time constant), chỉ áp dụng cho kiểu nguyên thủy/String và khai báo ở top-level/object; 'val' là biến gán 1 lần lúc chạy (run-time)
+B. 'val' có thể gán lại giá trị nhiều lần; 'const val' thì không
+C. 'val' chỉ dùng trong class; 'const val' chỉ dùng trong function
+D. 'const val' tiêu tốn nhiều bộ nhớ hơn 'val'
+Giải thích: const val được thay thế trực tiếp giá trị vào bytecode lúc compile (tương tự #define trong C). val là read-only reference, có thể nhận kết quả từ một hàm tính toán lúc runtime (ví dụ: val time = System.currentTimeMillis()).
+
+Câu 17: Trong Swift, cơ chế "Copy-on-Write" (CoW) được áp dụng cho loại kiểu dữ liệu nào và hoạt động ra sao?
+*A. Áp dụng cho các kiểu tham trị (Value Types) tiêu chuẩn như Array, Dictionary, String: Chỉ thực sự sao chép vùng nhớ khi có thao tác chỉnh sửa dữ liệu
+B. Áp dụng cho tất cả các Class
+C. Tự động sao chép dữ liệu mỗi khi biến được truyền vào hàm
+D. Cơ chế đồng bộ dữ liệu lên iCloud
+Giải thích: CoW tối ưu hiệu năng cho Value Types. Khi gán mảng A cho mảng B, cả hai vẫn cùng trỏ tới 1 vùng đệm bộ nhớ. Chỉ khi mảng B thực hiện thêm/sửa/xóa phần tử, Swift mới nhân bản vùng nhớ riêng cho B.
+
+Câu 18: Lỗi "Zombie Object" trong phát triển ứng dụng iOS là gì?
+*A. Đối tượng đã bị giải phóng vùng nhớ (deallocated) nhưng vẫn có con trỏ trỏ tới và cố gắng gửi tin nhắn (method call) tới nó, dẫn đến crash
+B. Một tiến trình chạy ngầm làm hao pin thiết bị
+C. Một virus máy tính trên hệ điều hành iOS
+D. Đối tượng bị rò rỉ bộ nhớ không thể giải phóng
+Giải thích: Trong Objective-C/C++, khi một con trỏ trỏ tới vùng nhớ đã bị giải phóng (dangling pointer) và gửi selector tới đó, hệ thống sẽ báo lỗi unrecognized selector hoặc crash EXC_BAD_ACCESS. Xcode có công cụ NSZombieEnabled để debug lỗi này.
+
+Câu 19: Trong Android, sự khác biệt giữa Service thông thường và WorkManager là gì?
+*A. WorkManager đảm bảo tác vụ nền được thực thi ngay cả khi ứng dụng bị tắt hoặc thiết bị khởi động lại, tự động tối ưu theo pin và mạng; Service thông thường dễ bị hệ thống tiêu diệt (kill)
+B. Service chỉ chạy khi có kết nối Internet
+C. WorkManager chỉ dùng để hiển thị thông báo Notification
+D. Service luôn chạy trên Background Thread mặc định
+Giải thích: Service thông thường mặc định vẫn chạy trên Main Thread và bị giới hạn khắt khe từ Android 8 (Doze mode, Background Execution Limits). WorkManager là giải pháp chuẩn của Google cho các tác vụ trì hoãn được nhưng đảm bảo phải chạy (guaranteed execution).
+
+Câu 20: Trong Jetpack Compose, hàm nào được dùng để lưu giữ trạng thái của một biến khi Composable bị tái cấu trúc (recomposition)?
+*A. remember { mutableStateOf(...) } (hoặc rememberSaveable nếu muốn sống sót qua xoay màn hình)
+B. useState()
+C. setState()
+D. keepState()
+Giải thích: Trong Jetpack Compose, remember lưu trữ giá trị qua các lần recomposition. Nếu muốn giữ giá trị khi Activity bị tái tạo do xoay màn hình, dùng rememberSaveable.
+
+Câu 21: Vấn đề "State Hoisting" trong Jetpack Compose / Flutter có ý nghĩa là gì?
+*A. Di chuyển trạng thái (State) lên widget cha để làm cho widget con trở thành stateless, giúp tăng tính tái sử dụng và dễ kiểm thử
+B. Lưu toàn bộ trạng thái vào database máy
+C. Đưa trạng thái ra khỏi luồng UI để chạy ngầm
+D. Tự động xóa trạng thái khi người dùng thoát ứng dụng
+Giải thích: State Hoisting là pattern nâng state lên component cha và truyền giá trị xuống con kèm callback sự kiện (unidirectional data flow), giúp UI thuần túy hiển thị dữ liệu mà không nắm giữ logic biến đổi.
+
+Câu 22: Cơ chế "App Thinning" của Apple trên App Store bao gồm những công nghệ nào sau đây?
+*A. App Slicing (cắt tài nguyên theo từng loại chip/thiết bị), Bitcode (tái biên dịch tối ưu), và On-Demand Resources (tải tài nguyên khi cần)
+B. Nén toàn bộ app thành file ZIP
+C. Giảm chất lượng hình ảnh của app xuống độ phân giải thấp
+D. Xóa bớt các màn hình không dùng đến
+Giải thích: App Thinning giúp người dùng chỉ tải về đúng những tài nguyên phù hợp với model máy của họ (ví dụ màn hình @2x không phải tải ảnh @3x, thiết bị 64-bit không tải mã 32-bit), giúp giảm đáng kể kích thước download.
+
+Câu 23: Trong React Native, Hook useMemo() và useCallback() khác nhau như thế nào?
+*A. useMemo ghi nhớ (memoize) kết quả tính toán của một hàm; useCallback ghi nhớ chính định nghĩa của hàm (function instance)
+B. useMemo dùng để lưu dữ liệu vào bộ nhớ máy; useCallback dùng để gọi API
+C. useCallback chỉ chạy khi component unmount
+D. useMemo và useCallback hoàn toàn có thể thay thế cho nhau trong mọi trường hợp
+Giải thích: useMemo(() => computeValue(a, b), [a, b]) tránh tính toán lại phép tính nặng. useCallback(fn, deps) giữ nguyên tham chiếu hàm giữa các lần render để tránh việc component con (được bọc bởi React.memo) bị re-render vô ích.
+
+Câu 24: Kỹ thuật "Deep Linking" (Custom URL Scheme và Universal Links / App Links) trên mobile có rủi ro bảo mật nào nếu không được xử lý cẩn thận?
+*A. Kẻ xấu có thể đăng ký URL Scheme trùng lặp để chiếm quyền mở app, hoặc truyền tham số độc hại vào query string để vượt qua bước xác thực
+B. Làm cho ứng dụng bị mất kết nối Wi-Fi
+C. Tự động xóa dữ liệu của người dùng
+D. Gây quá tải CPU thiết bị
+Giải thích: Custom URL Schemes không có cơ chế xác minh quyền sở hữu duy nhất (bất kỳ app nào cũng có thể đăng ký scheme myapp://). Universal Links (iOS) và App Links (Android) giải quyết vấn đề này bằng cách xác minh tệp apple-app-site-association và assetlinks.json trên domain máy chủ.
+
+Câu 25: Trong xử lý ảnh trên Mobile, kỹ thuật "Downsampling" hình ảnh trước khi hiển thị lên ImageView / Image widget nhằm mục đích gì?
+*A. Giải mã (decode) ảnh về độ phân giải phù hợp với kích thước khung hiển thị, tránh việc nạp ảnh gốc dung lượng khổng lồ vào RAM gây tràn bộ nhớ (OOM Crash)
+B. Làm cho ảnh có màu sắc rực rỡ hơn
+C. Đổi đuôi ảnh từ PNG sang JPG
+D. Tự động cắt bỏ viền ảnh
+Giải thích: Một bức ảnh 4000x3000 ARGB_8888 tốn tới 48MB RAM nếu nạp nguyên bản vào bộ đệm Bitmap. Downsampling giảm tỷ lệ inSampleSize / cacheWidth để giải mã vừa khít kích thước hiển thị (ví dụ 400x300 chỉ tốn 480KB RAM).
+
+Câu 26: Khái niệm "Cold Start", "Warm Start" và "Hot Start" trong đo lường hiệu năng khởi động ứng dụng di động được phân biệt như thế nào?
+*A. Cold Start: Khởi động từ đầu (chưa có process trong RAM); Warm Start: Process còn trong RAM nhưng Activity/UI phải tạo lại; Hot Start: Ứng dụng chỉ được đưa từ nền (Background) lên tiền cảnh (Foreground)
+B. Phân biệt dựa trên nhiệt độ của chip CPU khi chạy app
+C. Cold Start xảy ra khi máy không có mạng; Hot Start khi có mạng 5G
+D. Cold Start là mở app lần đầu sau khi cài đặt; Warm Start là mở app lần thứ hai
+Giải thích: Cold Start tốn thời gian nhất vì hệ thống phải tạo process mới, khởi tạo Application class, nạp tài nguyên và render giao diện đầu tiên. Tối ưu thời gian Cold Start là tiêu chí đánh giá năng lực của Senior Mobile Engineer.
+
+Câu 27: Khi thiết kế tính năng Offline-First cho ứng dụng di động (ví dụ ứng dụng ghi chú hoặc đặt hàng), chiến lược xử lý xung đột dữ liệu (Conflict Resolution) phổ biến nhất là gì?
+*A. Last-Write-Wins (dựa vào timestamp), Version Vector / CRDT (Conflict-free Replicated Data Types), hoặc hiển thị giao diện cho người dùng tự chọn bản ghi đúng
+B. Luôn luôn xóa bản ghi cũ của máy khách
+C. Khóa màn hình không cho người dùng sửa tiếp
+D. Hủy bỏ toàn bộ dữ liệu trên máy chủ
+Giải thích: Xử lý xung đột offline là bài toán kinh điển trong Mobile System Design. Cách đơn giản là Last-Write-Wins (ai ghi sau lấy bản đó); hệ thống phân tán chuyên sâu dùng CRDT hoặc đánh version number để hợp nhất.
+
+Câu 28: Trong Android, BroadcastReceiver có thời gian tối đa để hoàn thành xử lý trên Main Thread là bao lâu trước khi hệ thống coi là treo?
+A. 1 giây
+B. 5 giây
+*C. 10 giây
+D. 30 giây
+Giải thích: Hàm onReceive() của BroadcastReceiver chạy trên Main Thread và bị giới hạn nghiêm ngặt 10 giây. Nếu cần xử lý tác vụ dài hạn (như download file, xử lý DB), phải sử dụng goAsync() kết hợp WorkManager.
+
+Câu 29: Trong iOS, GCD (Grand Central Dispatch) cung cấp hai loại hàng đợi chính nào để điều phối luồng?
+*A. Serial Queue (thực thi tuần tự từng tác vụ một) và Concurrent Queue (thực thi đồng thời nhiều tác vụ trên nhiều luồng)
+B. First Queue và Last Queue
+C. Fast Queue và Slow Queue
+D. Local Queue và Cloud Queue
+Giải thích: Serial queue đảm bảo tính trật tự và an toàn luồng (thread-safety) vì các task chạy nối tiếp. Concurrent queue tận dụng nhiều nhân CPU chạy song song nhưng vẫn bắt đầu theo thứ tự FIFO.
+
+Câu 30: Để tránh vấn đề "Deadlock" khi sử dụng DispatchQueue.sync trong iOS, tình huống nào sau đây TUYỆT ĐỐI KHÔNG ĐƯỢC thực hiện?
+*A. Gọi DispatchQueue.main.sync trên chính Main Thread
+B. Gọi DispatchQueue.global().async từ Main Thread
+C. Gọi DispatchQueue.main.async từ Background Thread
+D. Tạo một Serial Queue riêng và gọi async
+Giải thích: Khi đang ở Main Thread mà gọi DispatchQueue.main.sync, Main Thread sẽ bị chặn lại để chờ task hoàn thành; nhưng task đó lại cần Main Thread rảnh để thực thi -> Hai bên chờ nhau mãi mãi tạo ra Deadlock gây đơ máy ngay lập tức.
+
+Câu 31: Trong Flutter, "GlobalKey" có đặc điểm và chi phí hiệu năng như thế nào so với LocalKey (ValueKey, ObjectKey, UniqueKey)?
+*A. GlobalKey cho phép truy cập State của Widget từ bất kỳ đâu và di chuyển Widget qua các cây con mà không mất trạng thái, nhưng chi phí rất đắt vì phải duy trì bản đồ toàn cục
+B. GlobalKey nhẹ hơn LocalKey gấp 10 lần
+C. GlobalKey chỉ dùng được trong StatelessWidget
+D. GlobalKey tự động xóa khi cuộn màn hình
+Giải thích: GlobalKey duy trì một bảng tra cứu toàn cục trên Element Tree, việc lạm dụng GlobalKey gây tốn kém hiệu năng đáng kể cho quá trình reconcile cây của Flutter. Chỉ nên dùng khi thực sự cần di chuyển State hoặc đo kích thước RenderBox.
+
+Câu 32: Trong React Native, cơ chế Hermes Engine mang lại lợi ích vượt trội gì cho ứng dụng Android và iOS so với JavaScriptCore truyền thống?
+*A. Biên dịch mã JavaScript trước sang Bytecode (Ahead-Of-Time - AOT Compilation), giảm kích thước APK, tối ưu bộ nhớ RAM và tăng tốc khởi động ứng dụng (TTI)
+B. Tự động chuyển đổi mã React sang Flutter
+C. Hỗ trợ đa luồng trực tiếp trong file .jsx
+D. Tăng tốc độ mạng 4G
+Giải thích: Hermes là JavaScript engine gọn nhẹ do Meta tối ưu riêng cho React Native. Bằng cách tiền biên dịch JS thành bytecode lúc build, thiết bị không cần phải phân tích cú pháp (parse) file JS lớn lúc mở app, giúp TTI (Time to Interactive) giảm mạnh.
+
+Câu 33: Khi ứng dụng di động nhận được Push Notification từ FCM (Firebase Cloud Messaging) hoặc APNs, hai loại thông báo cơ bản là gì?
+*A. Notification Message (hệ thống tự hiển thị Banner khi app ở nền) và Data Message / Silent Push (ứng dụng tự đánh thức ngầm để xử lý dữ liệu)
+B. Text Push và Audio Push
+C. Fast Push và Slow Push
+D. Local Push và Global Push
+Giải thích: Notification message được OS tự động hiển thị vào khay thông báo khi app ở background. Data message (Silent Push / Background notification) chuyển thẳng payload vào mã ứng dụng để ứng dụng âm thầm tải dữ liệu mới trước khi người dùng mở app.
+
+Câu 34: Trong bảo mật lưu trữ di động, tại sao KHÔNG ĐƯỢC lưu trữ Access Token, mật khẩu hoặc khóa bảo mật nhạy cảm vào SharedPreferences (Android) hoặc UserDefaults (iOS) thông thường?
+*A. Vì chúng lưu dưới dạng tệp văn bản thuần (XML / Plist) không mã hóa, thiết bị bị root/jailbreak hoặc backup có thể dễ dàng đọc trích xuất dữ liệu
+B. Vì SharedPreferences chỉ lưu được tối đa 100 bytes
+C. Vì chúng tự động bị xóa sau 24 giờ
+D. Vì hệ điều hành không cho phép lưu chuỗi ký tự
+Giải thích: SharedPreferences và UserDefaults chỉ dùng cho cài đặt giao diện (cờ Dark mode, cài đặt âm thanh). Dữ liệu nhạy cảm bắt buộc phải lưu vào EncryptedSharedPreferences / Android KeyStore trên Android và Keychain Services trên iOS.
+
+Câu 35: Trong Android, Intent loại nào được dùng để giao tiếp giữa các thành phần bên trong cùng 1 ứng dụng mà không sợ bị ứng dụng độc hại bên ngoài chặn bắt?
+*A. Explicit Intent (chỉ định rõ tên Component đích)
+B. Implicit Intent (chỉ dựa vào Action và Category)
+C. Broadcast Intent toàn hệ thống
+D. Sticky Intent
+Giải thích: Explicit Intent chỉ định đích danh Class component (ví dụ: Intent(this, DetailActivity::class.java)), đảm bảo tính bảo mật và chắc chắn thực thi đúng mục tiêu. Implicit Intent dùng cho các tác vụ chia sẻ hoặc mở camera ngoài.
+
+Câu 36: Thuật ngữ "Jank" trong trải nghiệm người dùng ứng dụng di động dùng để mô tả hiện tượng gì?
+*A. Hiện tượng giật lag, rớt khung hình (drop frames) khi thời gian render một khung hình vượt quá ngưỡng 16.6ms (chuẩn 60fps) hoặc 8.3ms (chuẩn 120fps)
+B. Hiện tượng ứng dụng bị mất kết nối mạng
+C. Hiện tượng màn hình bị đảo ngược màu sắc
+D. Hiện tượng loa phát ra tiếng ồn
+Giải thích: Để đạt 60fps mượt mà, mỗi khung hình phải được chuẩn bị và vẽ trong vòng dưới 16.6ms. Nếu tác vụ chiếm dụng UI thread quá lâu, màn hình sẽ bị trễ khung hình, tạo cảm giác giật cục (Jank).
+
+Câu 37: Trong kiến trúc MVI (Model-View-Intent), thành phần "Intent" mang ý nghĩa gì?
+*A. Đại diện cho ý định (Action/Event) tương tác của người dùng gửi tới hệ thống để biến đổi trạng thái (State)
+B. Là class chuyển trang Intent của hệ điều hành Android
+C. Là một hàm gọi API trực tiếp
+D. Là cơ sở dữ liệu tạm thời
+Giải thích: Trong kiến trúc MVI, Intent không phải là android.content.Intent, mà là biểu thị "User Intent" (ví dụ: SubmitLoginForm, ClickFavoriteButton). Dòng dữ liệu đi một chiều: View phát Intent -> Reducer/Store xử lý -> sinh ra ViewState mới -> View re-render.
+
+Câu 38: Khi sử dụng SQLite / Room Database trên di động, mục đích của việc tạo "Database Migration" khi nâng cấp phiên bản ứng dụng là gì?
+*A. Cập nhật cấu trúc bảng (thêm/sửa cột, bảng mới) mà bảo toàn toàn bộ dữ liệu hiện có của người dùng, tránh việc ứng dụng bị crash hoặc phải xóa trắng DB
+B. Tăng tốc độ đọc dữ liệu lên 10 lần
+C. Tự động chuyển đổi dữ liệu SQLite sang file JSON
+D. Tự động sao lưu dữ liệu lên Google Drive
+Giải thích: Nếu không có Migration script khi nâng DB version, Room sẽ ném ngoại lệ IllegalStateException hoặc (nếu dùng fallbackToDestructiveMigration) sẽ xóa sạch toàn bộ dữ liệu người dùng tích lũy từ trước.
+
+Câu 39: Để kiểm tra rò rỉ bộ nhớ (Memory Leak) tự động trong quá trình phát triển ứng dụng Android, thư viện nổi tiếng nào thường được tích hợp?
+A. Retrofit
+*B. LeakCanary
+C. Glide
+D. Dagger
+Giải thích: LeakCanary là thư viện mã nguồn mở hàng đầu của Square. Nó tự động theo dõi vòng đời của Activity/Fragment sau khi bị destroy, nếu đối tượng không được Garbage Collector thu hồi sau 5 giây thì sẽ dump heap và hiển thị đường dẫn tham chiếu gây leak.
+
+Câu 40: Trong iOS, công cụ nào trong bộ phần mềm Xcode Instruments được sử dụng để phân tích và truy vết rò rỉ bộ nhớ chuyên sâu?
+*A. Leaks and Allocations Instruments
+B. Time Profiler
+C. Network Instrument
+D. Core Animation Instrument
+Giải thích: Allocations theo dõi dung lượng bộ nhớ cấp phát theo thời gian thực; Leaks tự động quét heap để phát hiện các retain cycle và con trỏ mồ côi (orphaned memory blocks).
+
+Câu 41: Trong mô hình Dependency Injection (DI), nguyên lý "Inversion of Control" (IoC) mang lại lợi ích gì cho việc viết Unit Test?
+*A. Cho phép dễ dàng thay thế (Mock/Stub) các phụ thuộc thực tế (như Network Service, Database) bằng các đối tượng giả lập mà không cần sửa đổi mã nguồn nghiệp vụ
+B. Tự động viết mã Unit Test cho lập trình viên
+C. Giúp ứng dụng khởi động nhanh hơn 50%
+D. Giảm số lượng dòng code xuống một nửa
+Giải thích: Bằng cách inject phụ thuộc qua Constructor (thay vì tự new instance bên trong class), trong Unit Test ta có thể inject MockRepository để kiểm tra logic mà không cần kết nối mạng hay database thật.
+
+Câu 42: Trong Kotlin Coroutines, sự khác biệt giữa async và launch là gì?
+*A. 'launch' trả về một Job và không trả về giá trị kết quả (fire-and-forget); 'async' trả về một Deferred<T> và có thể gọi .await() để nhận kết quả trả về
+B. 'launch' chạy nhanh hơn 'async'
+C. 'async' chỉ chạy trên Main Thread
+D. 'launch' tự động bắt mọi ngoại lệ mà không làm crash app
+Giải thích: launch dùng cho các hành động thực thi không cần lấy về dữ liệu (như ghi log, lưu DB). async dùng cho các tác vụ cần lấy dữ liệu trả về, hỗ trợ gom nhiều Deferred để gọi awaitAll() song song.
+
+Câu 43: Khái niệm "Coroutine Scope" và "Job Hierarchy" trong Kotlin Coroutines đảm bảo nguyên lý nào sau đây?
+*A. Structured Concurrency (Tính đồng thời có cấu trúc): Khi Scope cha bị hủy (cancel), toàn bộ các Coroutine con thuộc về nó sẽ tự động bị hủy theo, ngăn ngừa rò rỉ tác vụ nền
+B. Tự động khởi động lại coroutine khi có lỗi
+C. Chạy tất cả coroutine trên cùng một luồng duy nhất
+D. Giới hạn số lượng biến toàn cục
+Giải thích: Structured Concurrency đảm bảo không có tác vụ mồ côi chạy ngầm lãng phí tài nguyên khi màn hình UI bị đóng (ví dụ: viewModelScope tự động cancel tất cả coroutine con khi ViewModel bị clear).
+
+Câu 44: Trong Swift, từ khóa "actor" (được giới thiệu từ Swift 5.5) giải quyết vấn đề kỹ thuật nào trong lập trình đa luồng?
+*A. Ngăn ngừa Data Race bằng cách cô lập trạng thái (State Isolation), đảm bảo chỉ có duy nhất một tác vụ được truy cập và biến đổi thuộc tính của actor tại một thời điểm
+B. Tự động vẽ giao diện hoạt hình (Animation)
+C. Cho phép đa kế thừa giữa các class
+D. Tự động mã hóa dữ liệu gửi qua mạng
+Giải thích: Actor là reference type tương tự class nhưng có cơ chế đồng bộ nội tại. Mọi truy cập vào thuộc tính/method có thể thay đổi của actor từ bên ngoài đều phải dùng từ khóa await, loại bỏ hoàn toàn Race Condition mà không cần lập trình viên tự quản lý Lock thủ công.
+
+Câu 45: Trong Flutter, "BuildContext" thực chất đại diện cho điều gì?
+*A. Là chính đối tượng Element tương ứng với Widget trong cây Element, xác định vị trí của Widget đó trong hệ thống phân cấp cây
+B. Là một biến toàn cục lưu trữ cấu hình theme
+C. Là đối tượng Canvas dùng để vẽ
+D. Là file cấu hình của hệ điều hành
+Giải thích: Mọi Widget đều nhận BuildContext trong hàm build. Bản thân BuildContext là một interface được implement bởi Element class, cho phép widget tìm kiếm các InheritedWidget tổ tiên (như Theme.of(context), Navigator.of(context)).
+
+Câu 46: Tại sao việc gọi Navigator.of(context) ngay trong hàm initState() của một StatefulWidget thường báo lỗi "dependOnInheritedWidgetOfExactType called before initState completed"?
+*A. Vì tại thời điểm initState() chạy, Element vừa mới được gắn vào cây và chưa hoàn tất việc thiết lập liên kết với các widget tổ tiên
+B. Vì Navigator chỉ dùng được trong StatelessWidget
+C. Vì mạng chưa kịp kết nối
+D. Vì màn hình chưa được xoay
+Giải thích: Trong initState(), framework chưa hoàn thành việc mount element. Để điều hướng hoặc truy cập InheritedWidget an toàn ngay khi mở màn hình, cần đặt trong WidgetsBinding.instance.addPostFrameCallback((_) { ... }).
+
+Câu 47: Trong Android, cờ Intent "FLAG_ACTIVITY_CLEAR_TOP" kết hợp với "FLAG_ACTIVITY_NEW_TASK" thường được dùng trong kịch bản nào?
+*A. Điều hướng người dùng về màn hình Home hoặc Login và dọn dẹp sạch sẽ toàn bộ các Activity khác đang xếp chồng phía trên trong Task
+B. Mở thêm 1 tab trình duyệt mới
+C. Khởi động lại toàn bộ điện thoại
+D. Tải ứng dụng về từ Google Play
+Giải thích: Kịch bản đăng xuất hoặc bấm vào thông báo Push Notification thường dùng cờ này để đưa Activity mục tiêu lên đỉnh và tiêu diệt tất cả các màn hình cũ trước đó, tránh việc người dùng bấm nút Back lại quay về trang đăng nhập cũ.
+
+Câu 48: Trong quản lý bảo mật ứng dụng di động, phương pháp "Biometric Authentication" (Face ID, Touch ID, BiometricPrompt) nên được hiện thực an toàn như thế nào ở tầng Backend?
+*A. Client xác thực sinh trắc học thành công để mở khóa Private Key trong Hardware KeyStore/Secure Enclave, dùng khóa này ký một challenge do Backend gửi xuống
+B. Client gửi thẳng ảnh chụp khuôn mặt hoặc dấu vân tay lên server kiểm tra
+C. Client chỉ gửi một cờ boolean isSuccess = true lên server
+D. Client lưu mật khẩu thô vào SharedPreferences rồi gửi lên
+Giải thích: Dữ liệu sinh trắc học không bao giờ rời khỏi phần cứng thiết bị. Ứng dụng chuẩn chỉ dùng sinh trắc học để giải phóng Crypto Key trong Secure Enclave để ký Challenge (Chống giả mạo và chống Man-In-The-Middle).
+
+Câu 49: Công cụ "Fastlane" trong quy trình CI/CD cho ứng dụng di động tự động hóa những tác vụ nào?
+*A. Tự động tạo chứng chỉ (Certificates/Provisioning profiles), chụp ảnh màn hình đa ngôn ngữ, build bản phát hành và tự động đẩy lên TestFlight / Google Play Console
+B. Tự động viết mã tính năng mới
+C. Quản lý dung lượng pin của server
+D. Thay thế hoàn toàn mã nguồn Android và iOS
+Giải thích: Fastlane là công cụ mã nguồn mở kinh điển viết bằng Ruby, giúp tự động hóa toàn bộ công việc tốn thời gian và dễ sai sót thủ công khi deploy ứng dụng lên App Store và CH Play.
+
+Câu 50: Thuật ngữ "R8" (hoặc ProGuard) trong quy trình biên dịch Android thực hiện những nhiệm vụ quan trọng nào?
+*A. Thu nhỏ mã nguồn (Shrinking/Tree-shaking), tối ưu hóa bytecode, làm mờ mã (Obfuscation) và xóa bỏ tài nguyên không dùng để giảm kích thước APK và chống dịch ngược
+B. Tự động dịch mã Java sang Swift
+C. Kiểm tra lỗi chính tả trong ứng dụng
+D. Nâng cấp phiên bản Android tự động
+Giải thích: R8 phân tích toàn bộ đồ thị gọi hàm, loại bỏ các class/method không được gọi tới, đổi tên các class/biến thành ký tự ngắn (a, b, c) để gây khó khăn cho kẻ xấu dịch ngược mã nguồn bằng công cụ JADX.
+
+Câu 51: Khi ứng dụng di động sử dụng kiến trúc BLoC (Business Logic Component), các thành phần giao tiếp với nhau như thế nào?
+*A. UI gửi các Event vào Stream, BLoC xử lý nghiệp vụ bất đồng bộ và phát (emit) ra các State mới qua Stream để UI lắng nghe và vẽ lại
+B. UI gọi trực tiếp các hàm cập nhật database
+C. BLoC lưu trữ toàn bộ các widget giao diện
+D. BLoC phụ thuộc trực tiếp vào BuildContext của Flutter
+Giải thích: BLoC áp dụng cơ chế Stream/Sink độc lập hoàn toàn với UI framework. Quy tắc nghiêm ngặt: Event In -> State Out. BLoC không được import package flutter/material.dart để đảm bảo khả năng tái sử dụng và kiểm thử 100%.
+
+Câu 52: Trong thiết kế hệ thống Mobile cho ứng dụng Tin nhắn tức thời (Chat App như Zalo, Messenger), giao thức mạng nào thường được ưu tiên sử dụng để duy trì kết nối hai chiều thời gian thực với độ trễ tối thiểu?
+*A. WebSocket hoặc TCP Socket tùy biến (kết hợp Protobuf để nén gói tin)
+B. HTTP Polling liên tục mỗi 1 giây
+C. Gửi tin nhắn qua giao thức FTP
+D. SMTP
+Giải thích: HTTP Polling gây lãng phí băng thông và hao pin khủng khiếp do phải liên tục bắt tay TLS. WebSocket duy trì một kết nối TCP bền bỉ (persistent connection) hai chiều, overhead cực nhẹ, rất lý tưởng cho ứng dụng thời gian thực.
+
+Câu 53: Cơ chế "Refresh Token Rotation" trong xác thực OAuth 2.0 / JWT trên mobile hoạt động như thế nào để nâng cao tính bảo mật?
+*A. Mỗi khi Access Token hết hạn và dùng Refresh Token để lấy token mới, máy chủ sẽ vô hiệu hóa Refresh Token cũ và cấp phát một cặp (Access Token + Refresh Token) hoàn toàn mới
+B. Giữ nguyên Refresh Token vĩnh viễn không bao giờ đổi
+C. Lưu Access Token trong thẻ nhớ ngoài
+D. Yêu cầu người dùng nhập lại mật khẩu mỗi 5 phút
+Giải thích: Nếu một Refresh Token bị kẻ xấu đánh cắp, cơ chế Rotation sẽ phát hiện ngay khi token cũ đã dùng được đem ra sử dụng lại, từ đó server lập tức thu hồi toàn bộ phiên đăng nhập của tài khoản đó.
+
+Câu 54: Trong Android, "ContentProvider" được thiết kế nhằm mục đích chính nào?
+*A. Cung cấp cơ chế an toàn và chuẩn hóa để chia sẻ dữ liệu có cấu trúc giữa các ứng dụng khác nhau trên cùng một thiết bị (ví dụ danh bạ, ảnh thư viện)
+B. Dùng để phát âm thanh nền
+C. Dùng để vẽ các hình động đồ họa
+D. Dùng để thay thế WebView
+Giải thích: ContentProvider đóng gói dữ liệu và cung cấp cơ chế bảo mật (qua URI và quyền truy cập permissions) để ứng dụng này có thể đọc/ghi dữ liệu của ứng dụng khác một cách an toàn.
+
+Câu 55: Khi gặp lỗi "OutOfMemoryError: Failed to allocate a allocation until an OOM was triggered" trên thiết bị di động, nguyên nhân phổ biến nhất là gì?
+*A. Rò rỉ bộ nhớ tích lũy theo thời gian hoặc nạp các tệp hình ảnh Bitmap kích thước quá lớn vượt quá giới hạn heap size được cấp phát cho ứng dụng
+B. Ổ cứng điện thoại bị đầy dung lượng
+C. Tốc độ mạng 4G quá chậm
+D. Màn hình điện thoại bị vỡ cảm ứng
+Giải thích: Mỗi ứng dụng Android/iOS được hệ điều hành cấp phát một hạn mức RAM (heap limit). Nếu bị rò rỉ bộ nhớ (giữ static context) hoặc giải mã ảnh khổng lồ, heap sẽ cạn kiệt và dẫn tới OOM crash lập tức.
+
+Câu 56: Trong Swift, cơ chế "Generics" mang lại lợi ích gì cho việc thiết kế kiến trúc mạng Network Layer?
+*A. Cho phép viết một hàm gọi API duy nhất có thể giải mã linh hoạt ra bất kỳ kiểu dữ liệu nào tuân thủ giao thức Decodable (ví dụ: request<T: Decodable>(...))
+B. Tăng tốc độ truyền tải cáp quang
+C. Bỏ qua các lỗi chứng chỉ SSL
+D. Tự động chuyển đổi JSON sang XML
+Giải thích: Generics cho phép trừu tượng hóa kiểu dữ liệu. Chỉ cần viết một phương thức generic request<T: Decodable>, hàm này có thể parse tự động ra User, Product hay Order tùy thuộc vào kiểu mà caller mong muốn.
+
+Câu 57: Trong Flutter, "InheritedWidget" là nền tảng cốt lõi của các thư viện quản lý trạng thái nào sau đây?
+*A. Provider, ScopedModel (và các cơ chế nội tại như Theme, MediaQuery, Navigator)
+B. SQLite
+C. SharedPreferences
+D. Http Client
+Giải thích: InheritedWidget cho phép truyền dữ liệu hiệu quả từ trên xuống dưới cây widget mà không cần truyền qua constructor của từng cấp trung gian, đồng thời chỉ thông báo rebuild cho các widget con thực sự lắng nghe.
+
+Câu 58: Tại sao việc sử dụng "Singletons Pattern" một cách bừa bãi trong ứng dụng di động lại bị coi là một "Anti-Pattern"?
+*A. Gây khó khăn lớn cho việc viết Unit Test (khó Mock), giữ chặt trạng thái toàn cục (Global State) ẩn giấu và dễ gây rò rỉ bộ nhớ nếu vô tình giữ tham chiếu tới Context
+B. Làm cho ứng dụng chạy chậm hơn 100 lần
+C. Làm tăng kích thước file cài đặt APK
+D. Vì các hệ điều hành di động cấm dùng Singleton
+Giải thích: Singleton sống suốt vòng đời ứng dụng. Nếu Singleton giữ tham chiếu tới Activity/View Context, toàn bộ cây giao diện đó sẽ không bao giờ được GC thu hồi (Memory Leak). Hơn nữa, trạng thái toàn cục bị biến đổi từ nhiều nơi rất khó kiểm soát lỗi.
+
+Câu 59: Trong kiểm thử ứng dụng di động, "Unit Test", "Widget/Component Test" và "End-to-End (E2E) Test" được sắp xếp theo hình Kim Tự Tháp Kiểm Thử (Testing Pyramid) như thế nào về số lượng và chi phí?
+*A. Unit Test (nhiều nhất, chạy nhanh nhất, chi phí rẻ nhất) -> Widget Test (trung bình) -> E2E Test (ít nhất, chạy chậm nhất, chi phí đắt nhất)
+B. E2E Test phải viết nhiều nhất chiếm 90%
+C. Không cần viết Unit Test, chỉ cần test tay thủ công
+D. Widget Test chạy nhanh hơn Unit Test
+Giải thích: Testing Pyramid chuẩn khẳng định Unit Test phải chiếm tỷ trọng lớn nhất vì chạy trong vài giây trên máy ảo Java/Dart mà không cần khởi động thiết bị thật. E2E test tốn thời gian cài đặt và dễ bị chập chờn (flaky) nên chỉ tập trung vào các luồng quan trọng nhất (Happy Path).
+
+Câu 60: Khi thiết kế tính năng tải ảnh đại diện người dùng lên máy chủ đám mây, các bước tối ưu hóa nào bắt buộc phải thực hiện tại thiết bị Mobile trước khi gửi request?
+*A. Nén dung lượng (Compression), giảm kích thước độ phân giải (Resize) và xoay lại đúng góc định hướng ảnh (EXIF Orientation)
+B. Đổi tên file ảnh thành số ngẫu nhiên
+C. Tải ảnh lên ngay lập tức ở độ phân giải gốc 50MP
+D. Mã hóa ảnh thành chuỗi Base64 dài hàng triệu ký tự
+Giải thích: Ảnh chụp từ camera điện thoại hiện đại có dung lượng từ 5MB - 15MB. Gửi ảnh gốc gây tốn dữ liệu di động, hao pin và làm chậm trải nghiệm. Nén ảnh và sửa orientation trước khi upload là tiêu chuẩn bắt buộc của Mobile Engineer.
+
+Câu 61: Trong Android, sự khác biệt giữa getApplicationContext() và Activity Context là gì?
+*A. Application Context gắn liền với vòng đời của cả ứng dụng và an toàn khi lưu trữ lâu dài; Activity Context gắn với giao diện của màn hình đó và có thông tin Theme/Configuration
+B. Application Context dùng để mở Dialog giao diện
+C. Activity Context sống lâu hơn Application Context
+D. Hai Context này hoàn toàn có thể thay thế cho nhau trong mọi tình huống
+Giải thích: Dùng Activity Context để truyền vào Singleton hoặc Background Task sẽ gây rò rỉ Activity khi màn hình bị đóng. Tuy nhiên, Application Context không có thông tin Theme và không thể dùng để tạo Dialog hay Inflate giao diện.
+
+Câu 62: Trong iOS, "App Transport Security" (ATS) mặc định bắt buộc các kết nối mạng HTTP phải tuân thủ điều kiện gì?
+*A. Bắt buộc phải sử dụng giao thức bảo mật HTTPS với TLS phiên bản tối thiểu 1.2 và mật mã mạnh
+B. Cho phép kết nối tự do tới các trang web HTTP không bảo mật
+C. Bắt buộc phải có kết nối mạng VPN
+D. Cấm hoàn toàn việc tải ảnh từ Internet
+Giải thích: Apple đưa ra ATS từ iOS 9 để bảo vệ người dùng, chặn đứng mọi kết nối HTTP văn bản thuần (plaintext), trừ khi lập trình viên cố tình cấu hình ngoại lệ (NSAppTransportSecurity) trong file Info.plist.
+
+Câu 63: Trong Flutter, cơ chế "Tree Shaking" (đặc biệt là Font Tree Shaking) giúp ích gì cho bản build phát hành?
+*A. Tự động phân tích và loại bỏ các ký tự biểu tượng (Icons) hoặc mã nguồn không bao giờ được sử dụng trong app, giúp giảm mạnh dung lượng gói cài đặt
+B. Làm cho cây widget lắc lư tạo hiệu ứng động
+C. Tự động kiểm tra lỗi logic
+D. Tăng số lượng khung hình trên giây
+Giải thích: Thư viện CupertinoIcons hoặc MaterialIcons chứa hàng nghìn icon (vài MB). Font Tree Shaking chỉ đóng gói đúng những icon có xuất hiện trong mã nguồn, giảm kích thước font xuống chỉ còn vài chục KB.
+
+Câu 64: Khi người dùng bấm nút "Home" để ẩn ứng dụng Android xuống dưới nền, phương thức vòng đời nào của Activity chắc chắn sẽ được gọi?
+*A. onPause() và sau đó là onStop()
+B. onDestroy()
+C. onCreate()
+D. onRestart()
+Giải thích: Khi Activity không còn hiển thị trước mắt người dùng (hoàn toàn bị che khuất), hệ thống sẽ gọi onPause() rồi lập tức gọi onStop(). Nếu hệ thống thiếu RAM sau đó, process có thể bị tiêu diệt mà không gọi onDestroy().
+
+Câu 65: Khái niệm "Idempotency" trong thiết kế API mạng cho ứng dụng di động có ý nghĩa gì đối với trải nghiệm thanh toán hoặc đặt hàng?
+*A. Đảm bảo rằng việc gửi cùng một yêu cầu (kèm Idempotency Key) nhiều lần do mạng chập chờn cũng chỉ tạo ra duy nhất một giao dịch, tránh việc tài khoản bị trừ tiền nhiều lần
+B. Cho phép gửi yêu cầu với tốc độ nhanh gấp đôi
+C. Tự động hoàn tiền khi giao dịch thất bại
+D. Mã hóa thông tin thẻ ngân hàng
+Giải thích: Mạng di động thường xuyên bị mất kết nối lúc nhận phản hồi khiến app gửi lại request (retry). Idempotency Key giúp server nhận biết đây là yêu cầu trùng lặp và trả về kết quả cũ mà không thực thi trừ tiền lần hai.
+
+Câu 66: Trong Jetpack Compose, hiệu ứng phụ (Side-Effect) nào được dùng để thực thi một tác vụ bất đồng bộ phụ thuộc vào một khóa (key) và tự động hủy khi khóa thay đổi hoặc composable rời khỏi cây?
+*A. LaunchedEffect(key) { ... }
+B. remember { ... }
+C. DisposableEffect
+D. SideEffect
+Giải thích: LaunchedEffect khởi tạo một Coroutine Scope an toàn gắn liền với vòng đời của composable. Khi giá trị 'key' thay đổi, coroutine cũ sẽ bị cancel và coroutine mới được khởi chạy lại.
+
+Câu 67: Trong Flutter, widget "RepaintBoundary" được sử dụng khi nào để tối ưu hiệu năng đồ họa?
+*A. Khi một phần giao diện thường xuyên thay đổi/vẽ lại (như animation, đồng hồ bấm giờ), bọc nó trong RepaintBoundary để ngăn việc vẽ lại toàn bộ các phần tĩnh xung quanh
+B. Khi muốn tạo đường viền bo tròn cho widget
+C. Khi muốn ngăn người dùng chụp ảnh màn hình
+D. Khi muốn ứng dụng chạy trên đa màn hình
+Giải thích: RepaintBoundary tạo ra một RenderLayer riêng biệt. Khi widget con bị repaint, Flutter chỉ vẽ lại layer đó và ghép (composite) lại với layer cha tĩnh mà không phải duyệt vẽ lại toàn bộ cây đồ họa.
+
+Câu 68: Tại sao việc sử dụng khóa chính "UUID" (chuỗi ngẫu nhiên 36 ký tự) lại rất được ưa chuộng thay vì số nguyên tự tăng (Auto-increment ID) trong các ứng dụng di động hoạt động Offline-First?
+*A. Cho phép thiết bị di động có thể tự sinh ID duy nhất cho bản ghi mới ngay trong lúc offline mà hoàn toàn không lo sợ bị trùng lặp khóa chính khi đồng bộ lên máy chủ
+B. Vì UUID chiếm ít dung lượng lưu trữ hơn số nguyên
+C. Vì SQLite không hỗ trợ kiểu số nguyên
+D. Vì UUID giúp sắp xếp dữ liệu nhanh hơn
+Giải thích: Nếu dùng Auto-increment ID, hai máy cùng tạo bản ghi ID = 5 lúc mất mạng sẽ bị xung đột dữ liệu đè lên nhau khi kết nối lại server. UUID (đặc biệt UUIDv4) có xác suất trùng lặp bằng 0, cho phép client tự sinh ID an toàn tuyệt đối.
+
+Câu 69: Trong Android, kỹ thuật "Proguard Keep Rules" (-keep class ...) được dùng để làm gì khi bật chế độ thu nhỏ mã nguồn R8?
+*A. Bảo vệ các class hoặc phương thức không bị đổi tên hay bị xóa, đặc biệt là các Data Model dùng cơ chế Reflection (như Gson/Moshi parse JSON)
+B. Khóa mã nguồn không cho lập trình viên khác sửa
+C. Lưu file vào bộ nhớ trong
+D. Cho phép ứng dụng chạy trên máy ảo
+Giải thích: R8 đổi tên thuộc tính class thành a, b, c. Nếu class Model parse JSON qua Reflection (Gson), thư viện sẽ không tìm thấy tên trường gốc (như user_id) dẫn tới parse lỗi hoặc crash. Quy tắc -keep giữ nguyên tên thuộc tính cho các model này.
+
+Câu 70: Trong kiến trúc iOS VIPER, thành phần "Router" (hoặc Wireframe) chịu trách nhiệm cho công việc gì?
+*A. Quản lý việc điều hướng (Navigation) giữa các màn hình và cấu hình truyền dữ liệu cho màn hình mới
+B. Gọi trực tiếp API mạng
+C. Chứa các câu truy vấn cơ sở dữ liệu CoreData
+D. Định dạng giao diện hiển thị cho View
+Giải thích: VIPER phân rã trách nhiệm cực kỳ chi tiết. Router đảm nhận toàn bộ logic chuyển trang, tách rời Presenter khỏi UIKit (UINavigationController), giúp Presenter trở thành một class thuần túy dễ viết Unit Test.
+
+Câu 71: Trong Android, "Deep Link" thông qua App Links khác Custom Scheme ở điểm xác thực nào?
+*A. App Links yêu cầu máy chủ lưu trữ tệp 'assetlinks.json' để chứng minh ứng dụng thực sự thuộc sở hữu của chủ domain, mở app trực tiếp không hiện hộp thoại hỏi người dùng
+B. Custom Scheme an toàn hơn App Links
+C. App Links chỉ hoạt động trên mạng nội bộ
+D. Custom Scheme không cần khai báo trong AndroidManifest.xml
+Giải thích: App Links mang tính bảo mật và trải nghiệm cao nhất. Hệ điều hành tự động kiểm tra chứng chỉ SHA256 của app trên máy chủ domain; nếu khớp, đường link https://domain.com sẽ mở thẳng app mà không cần hiện popup "Mở bằng trình duyệt hay ứng dụng".
+
+Câu 72: Trong Dart, toán tử "cascade" (..) được sử dụng để làm gì?
+*A. Cho phép thực hiện một chuỗi các thao tác (gọi hàm, gán thuộc tính) trên cùng một đối tượng mà không cần lặp lại tên đối tượng đó
+B. So sánh hai danh sách có cùng phần tử
+C. Nhân đôi giá trị số học
+D. Bắt ngoại lệ bất đồng bộ
+Giải thích: Ví dụ: Paint()..color = Colors.black..strokeWidth = 2.0; toán tử cascade trả về chính đối tượng gốc sau mỗi thao tác, giúp khởi tạo và cấu hình object gọn gàng và thanh lịch.
+
+Câu 73: Trong React Native, "Virtual DOM" (hoặc Shadow Tree) được đồng bộ xuống các Native Views thông qua tiến trình nào?
+*A. Tiến trình Reconciler so sánh sự khác biệt (diffing) và gửi các lệnh đột biến (mutations) xuống Yoga Layout Engine để tính toán kích thước rồi render Native View thật
+B. Biên dịch mã React thành file mã máy nhị phân
+C. Sử dụng iframe của trình duyệt Safari
+D. Chụp ảnh màn hình giả lập
+Giải thích: React Native không vẽ pixel giả lập, nó dùng Yoga Engine (viết bằng C++) để tính toán bố cục Flexbox sang tọa độ pixel thực tế của Android (android.view.View) và iOS (UIView).
+
+Câu 74: Khái niệm "Certificate Pinning" có thể dẫn đến rủi ro nghiêm trọng nào nếu đội ngũ vận hành máy chủ gia hạn chứng chỉ SSL mà quên cập nhật ứng dụng di động?
+*A. Toàn bộ người dùng sử dụng phiên bản app cũ sẽ không thể kết nối được vào hệ thống (bị chặn kết nối mạng do không khớp mã băm chứng chỉ)
+B. Ứng dụng sẽ tự động tải phiên bản mới về máy
+C. Máy chủ sẽ bị đánh sập
+D. Dữ liệu trên điện thoại bị xóa sạch
+Giải thích: Đây là rủi ro lớn nhất của SSL Pinning (gọi là "Brick the app"). Nếu chứng chỉ trên server đổi mà app cũ ghim cert cũ, app sẽ coi server là kẻ tấn công và từ chối mọi kết nối. Giải pháp là ghim Public Key (HPKP) của Root/Intermediate CA hoặc chuẩn bị sẵn Backup Pin.
+
+Câu 75: Trong hệ điều hành iOS, quyền riêng tư "App Tracking Transparency" (ATT) bắt buộc ứng dụng phải làm gì từ phiên bản iOS 14.5?
+*A. Phải hiển thị hộp thoại xin phép người dùng một cách rõ ràng trước khi được phép theo dõi hành vi của họ trên các ứng dụng và trang web khác (để lấy mã IDFA)
+B. Cấm hoàn toàn mọi hình thức quảng cáo trong ứng dụng
+C. Cho phép người dùng xem toàn bộ mã nguồn của app
+D. Yêu cầu nhập mật khẩu Apple ID mỗi khi mở app
+Giải thích: ATT là cuộc cách mạng bảo mật của Apple, giáng đòn mạnh vào ngành quảng cáo nhắm mục tiêu (như Facebook Ads). Nếu người dùng chọn "Ask App not to Track", app chỉ nhận được chuỗi số 0 cho IDFA.
+
+Câu 76: Trong Flutter, hàm "runApp()" thực hiện điều gì đầu tiên?
+*A. Khởi tạo WidgetsFlutterBinding (nếu chưa có), gắn Root Widget vào RenderView và kích hoạt quy trình dựng khung hình đầu tiên
+B. Gọi API đăng nhập tài khoản
+C. Kiểm tra kết nối Internet
+D. Đọc dữ liệu từ ổ cứng
+Giải thích: runApp() là điểm xuất phát của cây widget Flutter, tạo ra RenderView của màn hình và biến Root Widget thành Root Element gắn kết với động cơ đồ họa.
+
+Câu 77: Khi một lập trình viên Mobile viết Unit Test cho một ViewModel, tại sao việc sử dụng "TestDispatcher" (trong Kotlin Coroutines) lại là bắt buộc?
+*A. Cho phép kiểm soát thời gian ảo (Virtual Time), biến các tác vụ bất đồng bộ delay() thành đồng bộ ngay lập tức và điều phối luồng Main trong môi trường kiểm thử không có Android OS
+B. Giúp code chạy trên nhiều máy chủ cùng lúc
+C. Để gửi kết quả test lên mạng xã hội
+D. Để bỏ qua tất cả các hàm bị lỗi
+Giải thích: Môi trường Unit Test trên máy tính (JVM) không có Android Looper.getMainLooper(), gọi Dispatchers.Main sẽ văng crash. StandardTestDispatcher / UnconfinedTestDispatcher giải quyết vấn đề này và cho phép tua nhanh thời gian (advanceUntilIdle).
+
+Câu 78: Trong Android, "Foreground Service" khác với Background Service ở điểm bắt buộc nào?
+*A. Bắt buộc phải luôn hiển thị một thông báo liên tục (Persistent Notification) trên thanh trạng thái để người dùng nhận biết ứng dụng đang chạy tác vụ quan trọng
+B. Chỉ được phép chạy tối đa 1 phút
+C. Không được phép truy cập Internet
+D. Tự động tắt khi màn hình điện thoại khóa
+Giải thích: Bắt đầu từ Android 8, để chống tình trạng ứng dụng chạy ngầm ngốn pin và theo dõi người dùng, mọi dịch vụ ngầm dài hạn (nghe nhạc, định vị GPS, ghi âm) bắt buộc phải là Foreground Service với thông báo rõ ràng không thể vuốt tắt.
+
+Câu 79: Trong Swift, kiểu dữ liệu "Result<Success, Failure>" thường được sử dụng trong Network Layer để giải quyết vấn đề gì?
+*A. Đóng gói kết quả của một tác vụ bất đồng bộ dưới dạng Enum tường minh gồm 2 trường hợp: .success(value) hoặc .failure(error), tránh việc vừa trả về data vừa trả về error lộn xộn
+B. Tăng tốc độ giải nén file
+C. Tự động thử lại request khi bị mất mạng
+D. Chuyển đổi mã Swift thành mã Objective-C
+Giải thích: Trước khi có Result type, callback thường là (Data?, Error?), tạo ra trạng thái mơ hồ (có thể cả hai đều nil hoặc cả hai đều có giá trị). Result<T, Error> đảm bảo tính loại trừ lẫn nhau (mutually exclusive) cực kỳ an toàn.
+
+Câu 80: Khi thiết kế tính năng xác thực hai yếu tố (2FA) bằng mã OTP gửi qua SMS, lỗ hổng bảo mật nào sau đây trên môi trường di động cần được cảnh giác?
+*A. Tấn công tráo SIM (SIM Swapping) hoặc phần mềm độc hại có quyền READ_SMS lén đọc tin nhắn chứa mã OTP
+B. Lỗ hổng tràn bộ nhớ đệm của màn hình cảm ứng
+C. Kẻ xấu nhìn lén qua camera trước
+D. Lỗi hiển thị sai phông chữ tiếng Việt
+Giải thích: SMS OTP không phải là phương thức 2FA bảo mật tuyệt đối vì tin nhắn không được mã hóa đầu cuối và dễ bị tấn công hoán đổi thẻ SIM. Các ứng dụng ngân hàng hiện đại chuyển sang dùng Authenticator App (TOTP) hoặc Smart OTP tích hợp ký số ngay trong app.
+
+Câu 81: Trong Jetpack Compose, "Modifier" được áp dụng theo thứ tự (Chaining Order) như thế nào?
+*A. Thứ tự chuỗi Modifier là cực kỳ quan trọng; việc đặt Modifier.padding() trước hay sau Modifier.clickable() / Modifier.background() sẽ mang lại kết quả giao diện và vùng bấm hoàn toàn khác nhau
+B. Thứ tự gọi Modifier không ảnh hưởng gì đến giao diện
+C. Modifier luôn tự động sắp xếp theo thứ tự bảng chữ cái
+D. Chỉ được áp dụng duy nhất 1 Modifier cho mỗi Composable
+Giải thích: Trong Compose, Modifier là cấu trúc chuỗi tuần tự. Ví dụ: .clickable().padding(16.dp) sẽ tạo hiệu ứng gợn sóng tràn viền; trong khi .padding(16.dp).clickable() chỉ cho phép bấm và tạo hiệu ứng gợn sóng bên trong khoảng đệm.
+
+Câu 82: Trong Flutter, sự khác biệt giữa "StatelessWidget" và "StatefulWidget" là gì?
+*A. StatelessWidget có cấu hình cố định không thay đổi theo thời gian; StatefulWidget duy trì một đối tượng State riêng biệt có thể thay đổi và kích hoạt vẽ lại giao diện trong suốt vòng đời
+B. StatelessWidget chạy trên GPU; StatefulWidget chạy trên CPU
+C. StatelessWidget chỉ dùng được trên web
+D. StatefulWidget không thể chứa các widget con
+Giải thích: StatelessWidget là hàm thuần túy ánh xạ configuration -> UI. Khi dữ liệu của widget cần biến đổi dựa trên tương tác người dùng, thời gian hoặc network, cần dùng StatefulWidget để lưu trữ biến trong class State.
+
+Câu 83: Kỹ thuật "Pagination" theo kiểu "Cursor-based" (con trỏ) vượt trội hơn "Offset-based" (page & limit) ở điểm nào khi áp dụng cho ứng dụng tin tức / mạng xã hội?
+*A. Tránh bị trùng lặp hoặc bỏ sót dữ liệu khi có bài viết mới được thêm vào liên tục ở đầu trang, đồng thời hiệu năng truy vấn database không bị chậm đi khi cuộn sâu
+B. Không cần kết nối Internet vẫn phân trang được
+C. Giảm dung lượng file APK
+D. Tự động dịch bài viết sang ngôn ngữ khác
+Giải thích: Với Offset-based (page=2&limit=10), nếu trong lúc đọc có 2 bài mới đăng, bài cuối của page 1 sẽ bị đẩy sang đầu page 2 gây trùng lặp. Cursor-based dùng con trỏ mốc (ID hoặc timestamp của item cuối) để truy vấn WHERE id < last_id, ổn định 100% và cực nhanh.
+
+Câu 84: Trong Android, "StrictMode" là công cụ lập trình viên dùng để làm gì?
+*A. Phát hiện các thao tác vi phạm quy chuẩn hiệu năng như vô tình đọc ghi ổ đĩa, gọi mạng trên Main Thread hoặc rò rỉ tài nguyên mạng/con trỏ
+B. Khóa điện thoại khi người dùng nhập sai mật khẩu
+C. Kiểm tra độ phân giải của camera
+D. Tự động đóng các ứng dụng chạy ngầm
+Giải thích: StrictMode được bật trong hàm onCreate của Application ở chế độ Debug. Nếu phát hiện lệnh I/O chạy trên Main Thread, nó sẽ nháy đỏ màn hình hoặc in stacktrace cảnh báo để dev chuyển tác vụ sang Background Thread.
+
+Câu 85: Khái niệm "Dependency Injection" (DI) khác gì so với "Service Locator"?
+*A. DI cung cấp phụ thuộc từ bên ngoài vào class (thường qua Constructor); Service Locator yêu cầu chính class đó phải tự gọi đến một registry trung tâm để tìm kiếm phụ thuộc
+B. DI làm cho code bị phụ thuộc chặt chẽ hơn Service Locator
+C. Service Locator giúp viết Unit Test dễ hơn DI
+D. Hai khái niệm này hoàn toàn tương đồng nhau
+Giải thích: Service Locator ẩn giấu các phụ thuộc của class (lập trình viên nhìn constructor không biết class cần gì để hoạt động, dẫn đến runtime crash nếu quên đăng ký service). DI công khai toàn bộ phụ thuộc qua constructor, lỗi thiếu phụ thuộc sẽ được phát hiện ngay lúc compile.
+
+Câu 86: Trong iOS, "Size Classes" (Compact và Regular) được Apple sử dụng để giải quyết vấn đề gì?
+*A. Phân loại không gian hiển thị của màn hình theo chiều ngang và dọc, giúp thiết kế giao diện thích ứng (Adaptive Layout) trên mọi kích cỡ iPhone, iPad và chế độ Split View
+B. Đo lường kích thước dung lượng RAM của thiết bị
+C. Phân loại kích thước file ảnh
+D. Định dạng cỡ chữ hiển thị
+Giải thích: Thay vì đo kích thước pixel cứng (như 375x667), Size Classes chia màn hình thành 2 trạng thái: Compact (chật hẹp - như chiều ngang iPhone) và Regular (rộng rãi - như iPad). Auto Layout dựa vào đây để đổi bố cục từ 1 cột sang 2 cột linh hoạt.
+
+Câu 87: Trong Flutter, "CustomPainter" được sử dụng khi nào?
+*A. Khi cần vẽ các hình dạng đồ họa tùy biến, biểu đồ phức tạp, đường cong Bezier hoặc hiệu ứng đặc biệt trực tiếp lên Canvas đồ họa
+B. Khi muốn chỉnh sửa ảnh chụp từ camera
+C. Khi muốn dịch ứng dụng sang tiếng nước ngoài
+D. Khi muốn đổi tên file của dự án
+Giải thích: Khi các widget tiêu chuẩn (Container, Row, Column) không đáp ứng được các hình dạng hình học phức tạp, CustomPainter cung cấp hàm paint(Canvas canvas, Size size) để dev tự do vẽ đường nét, hình tròn, shader gradient với hiệu năng đồ họa cực cao.
+
+Câu 88: Trong bảo mật Mobile, phương pháp "Obfuscation" (làm mờ mã) làm thay đổi điều gì trong ứng dụng?
+*A. Đổi tên các class, method, biến thành các ký tự vô nghĩa (như a, b, c), xóa metadata gỡ lỗi và làm rối loạn luồng điều khiển để gây khó khăn tối đa cho kẻ tấn công khi dịch ngược
+B. Làm cho màn hình ứng dụng bị mờ đi khi người khác nhìn trộm
+C. Mã hóa toàn bộ dữ liệu người dùng gửi lên server
+D. Nén ảnh trong ứng dụng thành ảnh đen trắng
+Giải thích: Obfuscation không làm thay đổi logic hoạt động của mã máy nhưng làm mất ngữ nghĩa của mã nguồn khi bị decomplie qua công cụ như Jadx hay Hopper, bảo vệ tài sản trí tuệ và logic bảo mật của doanh nghiệp.
+
+Câu 89: Thuật ngữ "Tree-shaking" trong các công cụ đóng gói phần mềm di động có nghĩa là gì?
+*A. Quá trình phân tích tĩnh mã nguồn để loại bỏ tất cả các đoạn mã (dead code), thư viện con không bao giờ được gọi đến ra khỏi gói cài đặt cuối cùng
+B. Kiểm tra độ rung lắc của cảm biến con quay hồi chuyển trên điện thoại
+C. Tự động kiểm thử giao diện bằng cách gửi sự kiện chạm ngẫu nhiên
+D. Tái cấu trúc lại thư mục dự án
+Giải thích: Tương tự như lắc một cái cây để các lá chết rụng xuống, Tree-shaking loại bỏ các class, method thừa trong các thư viện bên thứ ba mà app không dùng tới, giúp giảm đáng kể kích thước file nhị phân (binary size).
+
+Câu 90: Trong Android, khi nào một Service nên được triển khai dưới dạng "Bound Service"?
+*A. Khi các thành phần khác (Activity, Fragment) muốn tương tác hai chiều liên tục với Service, gửi yêu cầu và nhận kết quả trực tiếp thông qua một IBinder interface
+B. Khi muốn Service chạy mãi mãi ngay cả khi người dùng gỡ app
+C. Khi muốn Service phát video lên tivi
+D. Khi Service chỉ làm duy nhất một tác vụ độc lập rồi tự tắt
+Giải thích: Bound Service hoạt động theo mô hình Client-Server cục bộ. Activity gọi bindService() để nhận interface IBinder, cho phép gọi hàm trực tiếp vào Service để lấy dữ liệu (ví dụ: phát nhạc, đo tốc độ di chuyển realtime).
+
+Câu 91: Trong Swift, giao thức (Protocol) "Codable" là sự kết hợp của hai giao thức nào?
+*A. Encodable (chuyển đổi đối tượng thành dữ liệu như JSON) và Decodable (giải mã dữ liệu JSON thành đối tượng)
+B. Equatable và Comparable
+C. Hashable và Identifiable
+D. ObservableObject và Any
+Giải thích: typealias Codable = Encodable & Decodable. Việc tuân thủ Codable cho phép Swift tự động sinh code chuyển đổi hai chiều giữa struct/class và định dạng JSON thông qua JSONEncoder và JSONDecoder mà không cần viết dòng code parse thủ công nào.
+
+Câu 92: Trong React Native, "Metro Bundler" đảm nhận nhiệm vụ gì trong quá trình phát triển?
+*A. Phân tích đồ thị phụ thuộc (dependency graph), biên dịch tất cả các tệp JavaScript/JSX và tài nguyên thành một tệp bundle duy nhất để truyền tới thiết bị máy ảo/máy thật
+B. Tự động tạo chứng chỉ bảo mật trên App Store
+C. Dịch mã JavaScript thành mã C++
+D. Chạy máy chủ cơ sở dữ liệu MongoDB
+Giải thích: Metro là bundler chuyên dụng cho React Native, có tốc độ cực nhanh, hỗ trợ Fast Refresh (cập nhật code tức thì không mất state) và tối ưu hóa gói bundle khi xuất bản ứng dụng.
+
+Câu 93: Trong hệ sinh thái Flutter, "Keys" (như ValueKey, ObjectKey, UniqueKey) được sử dụng để giải quyết vấn đề cốt lõi nào?
+*A. Giúp Flutter phân biệt và duy trì đúng State của các Widget cùng loại khi vị trí của chúng trong danh sách bị thay đổi (như khi sắp xếp, xóa phần tử)
+B. Mã hóa mật khẩu của người dùng
+C. Dùng làm khóa kết nối đến Firebase
+D. Tăng tốc độ đường truyền mạng
+Giải thích: Khi danh sách các Stateful widget bị đảo thứ tự hoặc xóa bớt, nếu không có Key, Flutter chỉ dựa vào RuntimeType để tái sử dụng Element, dẫn đến việc dữ liệu State của item này bị gán nhầm sang item khác. Key đảm bảo tính đồng nhất 1-1 giữa Widget và Element.
+
+Câu 94: Lỗ hổng "Tapjacking" (hoặc UI Redressing) trên hệ điều hành Android là gì?
+*A. Kẻ tấn công tạo một lớp màn hình trong suốt (Overlay) đè lên ứng dụng hợp pháp để lừa người dùng chạm vào nút xác nhận chuyển tiền hoặc cấp quyền nguy hiểm mà họ không hề hay biết
+B. Người dùng vô tình chạm hai lần vào màn hình
+C. Màn hình cảm ứng bị loạn cảm ứng do nước dính vào
+D. Ứng dụng tự động tăng độ sáng màn hình
+Giải thích: Kẻ xấu dùng quyền SYSTEM_ALERT_WINDOW để vẽ đè view lừa đảo. Để phòng tránh, ứng dụng ngân hàng kích hoạt thuộc tính android:filterTouchesWhenObscured="true" trên các nút bấm quan trọng.
+
+Câu 95: Trong thiết kế kiến trúc di động, "Repository Pattern" đóng vai trò gì?
+*A. Là lớp trừu tượng hóa trung gian phân xử việc lấy dữ liệu từ đâu (Local Database hay Remote API), che giấu nguồn gốc dữ liệu đối với tầng nghiệp vụ (Domain / UseCase)
+B. Là nơi lưu mã nguồn của toàn bộ dự án trên GitHub
+C. Là một server chuyên lưu trữ hình ảnh
+D. Dùng để thay thế tầng giao diện UI
+Giải thích: UseCase chỉ cần gọi repository.getUser(id). Bản thân Repository sẽ tự quyết định: nếu trong Room/SQLite có cache và chưa hết hạn thì trả về ngay; nếu chưa có thì gọi Retrofit/API, lưu vào DB rồi mới trả về.
+
+Câu 96: Trong Android, "LiveData" khác với Kotlin "StateFlow" ở điểm cơ bản nào?
+*A. LiveData gắn liền và nhận thức được vòng đời (Lifecycle-aware) của Android UI; StateFlow là một Flow thuần túy của Kotlin không phụ thuộc vào Android SDK và yêu cầu Coroutine Scope để thu thập (collect)
+B. LiveData chỉ chạy trên background
+C. StateFlow không lưu trữ giá trị hiện tại
+D. LiveData chỉ hỗ trợ ngôn ngữ Java
+Giải thích: LiveData tự động ngừng phát dữ liệu khi Activity ở trạng thái STOPPED và tự kích hoạt lại khi STARTED. StateFlow là luồng trạng thái độc lập của Kotlin coroutines, khi dùng trong UI cần kết hợp repeatOnLifecycle để tránh rò rỉ tác vụ nền.
+
+Câu 97: Trong lập trình iOS với UIKit, cơ chế "Auto Layout" giải quyết bài toán giao diện dựa trên hệ thống toán học nào?
+*A. Hệ thống các phương trình và bất phương trình ràng buộc tuyến tính (Linear Constraints: y = m * x + b) thông qua thuật toán Cassowary
+B. Tính toán tọa độ pixel tĩnh tuyệt đối
+C. Dùng bảng HTML Table
+D. Tự động chụp ảnh màn hình rồi co giãn
+Giải thích: Auto Layout không dùng tọa độ cố định x, y, width, height mà định nghĩa các ràng buộc quan hệ (ví dụ: viewA.leading = viewB.trailing + 8). Động cơ Cassowary giải hệ phương trình này trong thời gian thực để tìm ra tọa độ chuẩn xác trên mọi kích thước màn hình.
+
+Câu 98: Tại sao việc sử dụng "Enum" có giá trị gắn kèm (Associated Values) trong Swift lại cực kỳ mạnh mẽ để mô hình hóa trạng thái giao diện (UI State)?
+*A. Cho phép biểu diễn các trạng thái loại trừ lẫn nhau một cách chặt chẽ kèm dữ liệu cụ thể (ví dụ: .loading, .success(data), .error(message)), loại bỏ hoàn toàn trạng thái không hợp lệ
+B. Tăng tốc độ kết nối Wi-Fi
+C. Giúp ứng dụng không bao giờ bị người dùng gỡ cài đặt
+D. Tự động chuyển đổi giao diện sang chế độ tối
+Giải thích: Thay vì dùng 3 biến boolean isLoading, data, errorMessage rời rạc (dễ dẫn tới trạng thái lỗi như vừa loading vừa có error), Enum với Associated Values đảm bảo tại 1 thời điểm chỉ có 1 trạng thái duy nhất tồn tại, code xử lý bằng switch-case toàn diện (exhaustive).
+
+Câu 99: Trong Flutter, "CustomScrollView" kết hợp với các widget "Sliver" (như SliverAppBar, SliverList, SliverGrid) mang lại khả năng gì vượt trội?
+*A. Tạo ra các hiệu ứng cuộn tinh tế, biến đổi linh hoạt kích thước thanh tiêu đề (Collapsing Toolbar), cuộn lồng nhau mượt mà và tối ưu hóa việc dựng các danh sách đa dạng trong cùng một viewport
+B. Cho phép phát video trực tiếp từ máy ảnh
+C. Tự động lưu bài viết vào ổ cứng
+D. Khóa cuộn màn hình lại
+Giải thích: Sliver là một phần của vùng có thể cuộn. Không giống như các box thông thường, Sliver nhận thông tin ràng buộc cuộn (SliverConstraints) và chỉ render phần diện tích hiển thị thực tế, cho phép tạo ra các hiệu ứng parallax, thanh header co giãn đẳng cấp.
+
+Câu 100: Trong Android, "Proximity Sensor" (Cảm biến tiệm cận) thường được các ứng dụng gọi điện / nhắn tin kích hoạt nhằm mục đích gì?
+*A. Tự động tắt màn hình và vô hiệu hóa cảm ứng khi người dùng áp điện thoại vào tai để nghe gọi, tránh việc má chạm nhầm vào nút ngắt cuộc gọi và tiết kiệm pin
+B. Đo khoảng cách từ người dùng tới trạm phát sóng di động
+C. Tăng âm lượng loa thoại lên mức tối đa
+D. Bật đèn flash tự động
+Giải thích: Khi cảm biến tiệm cận phát hiện vật thể ở cự ly gần (áp sát tai), hệ thống kích hoạt WakeLock chế độ PROXIMITY_SCREEN_OFF_WAKE_LOCK để tắt màn hình bảo vệ cuộc gọi.
+
+Câu 101: Trong thiết kế cơ sở dữ liệu di động, kỹ thuật "FTS" (Full-Text Search) trong SQLite / Room mang lại ưu thế gì so với câu lệnh LIKE '%keyword%' thông thường?
+*A. Xây dựng chỉ mục lập chỉ mục đảo (Inverted Index) chuyên dụng cho văn bản, cho phép tìm kiếm từ khóa với tốc độ siêu nhanh (O(1)) trên hàng triệu bản ghi và hỗ trợ tìm kiếm mờ (Fuzzy search)
+B. Bắt buộc phải có kết nối mạng mới tìm kiếm được
+C. Chỉ tìm kiếm được các số nguyên
+D. Tự động xóa các từ khóa viết sai chính tả
+Giải thích: Câu lệnh LIKE '%abc%' bắt buộc SQLite phải quét toàn bộ bảng (Full Table Scan), cực kỳ chậm trên mobile khi dữ liệu lớn. FTS3/FTS4/FTS5 tạo bảng ảo chỉ mục văn bản, tìm kiếm gần như tức thì với tài nguyên tối thiểu.
+
+Câu 102: Khái niệm "Memory Footprint" của một ứng dụng di động được hiểu là gì?
+*A. Tổng lượng bộ nhớ thực tế (Physical RAM) mà ứng dụng đang chiếm dụng từ hệ điều hành, bao gồm bộ nhớ Dirty Memory, Clean Memory và Compressed Memory
+B. Kích thước file cài đặt của ứng dụng trên cửa hàng CH Play
+C. Số lượng dòng code của dự án
+D. Tốc độ xung nhịp CPU của máy
+Giải thích: Memory Footprint là thước đo sinh tử trên mobile. Hệ điều hành (đặc biệt là iOS với Jetsam event) sẽ đơn phương tiêu diệt (kill) ứng dụng ngay lập tức nếu Memory Footprint vượt quá hạn mức cho phép mà không hề thông báo cho người dùng.
+
+Câu 103: Trong các ứng dụng ngân hàng / ví điện tử, kỹ thuật "Root / Jailbreak Detection" thường kiểm tra những dấu hiệu nào trên thiết bị?
+*A. Kiểm tra sự tồn tại của các tệp nhị phân su, Superuser.apk, kiểm tra quyền ghi vào thư mục hệ thống (/system), kiểm tra các ứng dụng can thiệp hook (Cydia, Magisk, Frida, Xposed)
+B. Kiểm tra xem người dùng có bật kết nối Bluetooth không
+C. Kiểm tra dung lượng thẻ nhớ ngoài
+D. Kiểm tra ngày mua của điện thoại
+Giải thích: Thiết bị đã bị Root/Jailbreak làm mất đi cơ chế cách ly bảo mật (App Sandbox) của hệ điều hành. Kẻ xấu có thể can thiệp bộ nhớ RAM, hook hàm đánh cắp mã PIN, mật khẩu, vì vậy các ứng dụng tài chính bắt buộc phải từ chối khởi chạy trên các máy này.
+
+Câu 104: Trong React Native, "Fast Refresh" khác gì so với "Live Reload" truyền thống?
+*A. Fast Refresh bảo toàn trạng thái (State) cục bộ của các component React sau khi sửa mã nguồn; Live Reload tải lại toàn bộ ứng dụng từ đầu và làm mất sạch trạng thái hiện tại
+B. Fast Refresh chỉ hoạt động trên hệ điều hành iOS
+C. Live Reload có tốc độ nhanh hơn Fast Refresh
+D. Fast Refresh yêu cầu phải tắt ứng dụng đi bật lại
+Giải thích: Live Reload gây ức chế lớn khi dev đang debug một form nhập liệu 5 bước (sửa 1 dòng code là văng về bước 1). Fast Refresh phân tích thông minh cây component và chỉ chèn lại mã mới vào vùng cần thiết, giữ nguyên giá trị người dùng vừa gõ trên màn hình.
+
+Câu 105: Khi thiết kế hệ thống thông báo cho một ứng dụng gọi xe (như Grab / Uber), tại sao không nên chỉ dựa duy nhất vào Push Notification (FCM/APNs) để cập nhật vị trí tài xế?
+*A. Vì Push Notification không đảm bảo thời gian phân phối theo thời gian thực (có thể bị trễ vài giây đến vài phút do cơ chế tiết kiệm pin Doze Mode của OS), cần kết hợp WebSocket/MQTT
+B. Vì Push Notification chỉ gửi được tin nhắn bằng tiếng Anh
+C. Vì Push Notification tốn chi phí 1 USD cho mỗi tin nhắn gửi đi
+D. Vì điện thoại chỉ nhận được tối đa 5 thông báo mỗi ngày
+Giải thích: APNs và FCM là giao thức "Best-effort delivery" (không có cam kết độ trễ realtime). Thiết bị ở chế độ ngủ (Doze Mode) sẽ gom thông báo lại để gửi hàng loạt. Vị trí xe đòi hỏi độ trễ dưới 1 giây nên bắt buộc phải dùng kết nối Socket trực tiếp khi app đang mở.
+
+Câu 106: Trong Android, "ViewBinding" giải quyết những nhược điểm nào của phương thức findViewById() truyền thống?
+*A. Đảm bảo an toàn kiểu dữ liệu (Type Safety) và an toàn đối với thuộc tính null (Null Safety), loại bỏ hoàn toàn nguy cơ NullPointerException do gõ sai ID giao diện
+B. Tăng tốc độ mạng Internet
+C. Tự động dịch giao diện sang ngôn ngữ khác
+D. Cho phép xem video không cần mạng
+Giải thích: findViewById() dễ văng lỗi ClassCastException nếu ép sai kiểu hoặc NullPointerException nếu ID không tồn tại trong layout hiện tại. ViewBinding tự sinh class liên kết chặt chẽ với từng view trong file XML lúc compile, đảm bảo an toàn tuyệt đối.
+
+Câu 107: Trong kiến trúc phần mềm di động, nguyên lý "Single Source of Truth" (SSOT) có ý nghĩa sống còn như thế nào?
+*A. Đảm bảo toàn bộ ứng dụng chỉ có duy nhất một nguồn dữ liệu gốc đáng tin cậy (thường là Local Database); giao diện người dùng chỉ đơn thuần quan sát (observe) và phản ánh dữ liệu từ nguồn này
+B. Tất cả code của dự án phải viết trong duy nhất 1 file
+C. Ứng dụng chỉ được phép gọi đến 1 API duy nhất
+D. Chỉ cho phép duy nhất một lập trình viên được chỉnh sửa code
+Giải thích: Nếu UI vừa nhận dữ liệu từ WebSocket, vừa nhận từ API, vừa đọc từ Cache rời rạc, giao diện sẽ xuất hiện trạng thái bất nhất (mâu thuẫn dữ liệu). Với SSOT, mọi luồng mạng đều đổ về Database, và UI chỉ lắng nghe sự thay đổi từ Database.
+
+Câu 108: Khi làm việc với ứng dụng Đa ngôn ngữ (Localization), tại sao việc ghép nối chuỗi bằng toán tử cộng chuỗi (ví dụ: "Bạn có " + count + " tin nhắn") lại bị coi là sai quy chuẩn nghiêm trọng?
+*A. Vì ngữ pháp và trật tự từ của các ngôn ngữ khác nhau hoàn toàn khác nhau (tiếng Nhật, tiếng Ả Rập, tiếng Đức), bắt buộc phải sử dụng chuỗi định dạng (String Format với placeholders như %d, %s)
+B. Vì phép cộng chuỗi làm ứng dụng bị treo máy ngay lập tức
+C. Vì hệ điều hành cấm sử dụng dấu cộng trong mã nguồn
+D. Vì chuỗi sẽ tự động bị xóa sau khi ứng dụng đóng
+Giải thích: Trong tiếng Anh là "Page 3 of 5", nhưng tiếng Đức hoặc tiếng Nhật trật tự từ có thể đảo ngược hoàn toàn. Chuỗi định dạng cho phép các dịch giả hoán đổi vị trí placeholder (ví dụ: %1$d của %2$d) mà không làm vỡ logic hiển thị.
+
+Câu 109: Trong Flutter, "StatefulWidget" có phương thức vòng đời nào được gọi ngay sau khi dependencies của nó thay đổi (ví dụ: khi Theme hoặc Locale thay đổi)?
+*A. didChangeDependencies()
+B. initState()
+C. dispose()
+D. deactivate()
+Giải thích: didChangeDependencies() được gọi ngay sau initState() và sẽ được kích hoạt lại bất cứ khi nào một đối tượng InheritedWidget mà widget này đăng ký lắng nghe (như Theme.of(context) hay MediaQuery.of(context)) phát ra thông báo thay đổi dữ liệu.
+
+Câu 110: Trong iOS, "Grand Central Dispatch" (GCD) cung cấp hàm "dispatch_barrier_async" trên một Concurrent Queue để làm gì?
+*A. Giải quyết bài toán Đọc-Ghi (Reader-Writer Problem): Cho phép nhiều luồng đọc đồng thời, nhưng khi có thao tác ghi thì tạm dừng tất cả để ghi dữ liệu một cách an toàn luồng (Thread-safe)
+B. Chặn đứng mọi cuộc tấn công mạng từ hacker
+C. Xóa sạch bộ nhớ RAM của thiết bị
+D. Ngăn không cho người dùng bấm vào màn hình
+Giải thích: Barrier block biến concurrent queue tạm thời hoạt động như một serial queue: đợi các task đọc trước đó hoàn thành, thực thi độc quyền task ghi, rồi mở lại cho các task đọc tiếp theo chạy song song. Đây là cách chuẩn để tạo Thread-safe Array/Dictionary trong Swift.
+
+Câu 111: Khái niệm "A/B Testing" trong phát triển ứng dụng di động cho phép các kỹ sư và nhà phát triển làm gì?
+*A. Phân chia người dùng thành các nhóm ngẫu nhiên để trải nghiệm các biến thể tính năng/giao diện khác nhau, từ đó thu thập số liệu phân tích định lượng xem biến thể nào đạt hiệu quả chuyển đổi cao hơn
+B. Kiểm tra xem ứng dụng có chạy được trên cả hệ điều hành Android và iOS không
+C. So sánh tốc độ giữa mạng 4G và Wi-Fi
+D. Kiểm tra độ bền của màn hình điện thoại
+Giải thích: A/B Testing (thông qua Firebase Remote Config hoặc Optimizely) giúp đưa ra quyết định dựa trên dữ liệu thực tế (Data-driven decision) thay vì cảm tính, giảm thiểu rủi ro khi tung ra các tính năng hoặc luồng trải nghiệm người dùng mới.
+
+Câu 112: Trong Android, "Vector Drawable" (sử dụng định dạng XML dựa trên đường dẫn SVG) mang lại lợi thế vượt trội gì so với ảnh PNG/JPG?
+*A. Khả năng co giãn sắc nét trên mọi mật độ điểm ảnh màn hình (hdpi, xhdpi, xxhdpi...) mà không hề bị vỡ hình, đồng thời giảm mạnh kích thước tệp APK vì chỉ cần duy nhất 1 file định nghĩa
+B. Cho phép phát âm thanh khi chạm vào ảnh
+C. Tự động tải ảnh từ trên mạng về
+D. Tự động chuyển đổi thành video
+Giải thích: Thay vì phải xuất và duy trì 5 thư mục ảnh PNG với các độ phân giải khác nhau, một tệp Vector Drawable duy nhất có thể hiển thị hoàn hảo từ đồng hồ thông minh đến tivi độ phân giải 4K với kích thước chỉ vài KB.
+
+Câu 113: Trong kiến trúc phần mềm di động, tại sao việc để logic nghiệp vụ (Business Logic) trực tiếp bên trong Activity (Android) hoặc UIViewController (iOS) lại là một sai lầm phổ biến của Junior Engineer?
+*A. Tạo ra hiện tượng "Massive View Controller / God Activity", khiến file mã nguồn phình to hàng nghìn dòng, phụ thuộc chặt chẽ vào hệ điều hành và hoàn toàn bất khả thi khi viết Unit Test
+B. Làm cho ứng dụng tự động bị xóa khỏi máy
+C. Làm cho pin điện thoại bị nóng lên nhanh chóng
+D. Làm cho hình ảnh của app bị mất màu
+Giải thích: View chỉ nên đảm nhận nhiệm vụ hiển thị và bắt tương tác. Nhồi nhét logic tính toán, gọi mạng, parse dữ liệu vào ViewController biến nó thành "God Object", phá vỡ nguyên lý đơn nhiệm (Single Responsibility Principle) trong SOLID.
+
+Câu 114: Trong Swift, cơ chế "ARC" theo dõi các tham chiếu trên vùng nhớ nào của thiết bị?
+*A. Vùng nhớ Heap (nơi lưu trữ các thực thể Class và Closures)
+B. Vùng nhớ Stack (nơi lưu trữ các biến cục bộ và Struct)
+C. Bộ nhớ ROM của máy
+D. Bộ nhớ lưu trữ trên iCloud
+Giải thích: Vùng nhớ Stack tự động giải phóng khi con trỏ hàm kết thúc mà không cần ARC can thiệp. ARC chỉ dành riêng để theo dõi và quản lý vòng đời của các đối tượng tham chiếu (Reference Types) được cấp phát động trên vùng nhớ Heap.
+
+Câu 115: Thuật ngữ "Feature Flag" (hoặc Feature Toggle) trên ứng dụng di động cho phép đội ngũ phát triển làm được điều gì?
+*A. Bật hoặc tắt từ xa một tính năng trên ứng dụng của người dùng thông qua cấu hình máy chủ mà không cần phải phát hành bản cập nhật mới lên App Store hay Google Play
+B. Tự động đổi màu nền của ứng dụng theo thời tiết
+C. Đánh cờ cảnh báo các thiết bị bị nhiễm virus
+D. Khóa các tài khoản vi phạm tiêu chuẩn cộng đồng
+Giải thích: Feature Flag kết hợp với CI/CD cho phép đội ngũ merge mã nguồn liên tục vào nhánh main (Trunk-based development) nhưng vẫn giấu tính năng chưa hoàn thiện, hoặc có thể tắt tính năng ngay lập tức (Kill switch) nếu phát hiện lỗi nghiêm trọng trên production.
+
+Câu 116: Trong Flutter, hàm "WidgetsBindingObserver.didChangeAppLifecycleState()" cho phép ứng dụng lắng nghe những trạng thái nào của vòng đời hệ thống?
+*A. AppLifecycleState.resumed, AppLifecycleState.inactive, AppLifecycleState.paused, và AppLifecycleState.detached
+B. State.onCreate, State.onStart, State.onDestroy
+C. open, close, pending, error
+D. light_mode, dark_mode, battery_low
+Giải thích: Bằng cách thêm WidgetsBindingObserver, Flutter app có thể nắm bắt chính xác khi nào người dùng gạt app xuống nền (paused), khi nào app quay lại tiền cảnh (resumed) để tạm dừng phát video hoặc làm mới dữ liệu realtime.
+
+Câu 117: Trong Android, "PendingIntent" khác với Intent thông thường ở điểm cốt lõi nào?
+*A. PendingIntent trao quyền cho một ứng dụng bên ngoài (như Notification Manager hoặc Alarm Manager) thực thi một Intent định sẵn với chính danh tính và quyền hạn của ứng dụng tạo ra nó
+B. PendingIntent chỉ chạy được khi thiết bị cắm sạc
+C. PendingIntent không thể mang theo tham số dữ liệu
+D. PendingIntent tự động bị hủy sau 1 giây
+Giải thích: Khi bạn bấm vào một thông báo trên thanh trạng thái, Notification Manager (thuộc hệ thống Android) sẽ kích hoạt PendingIntent mà ứng dụng của bạn đã trao quyền từ trước, mở đúng màn hình chi tiết như mong muốn.
+
+Câu 118: Khái niệm "Battery Drain" (suy hao pin) trong phát triển ứng dụng di động thường bị gây ra bởi những nguyên nhân kỹ thuật phổ biến nào sau đây?
+*A. Quá lạm dụng việc quét vị trí GPS độ chính xác cao liên tục, giữ WakeLock không chịu giải phóng, duy trì kết nối mạng polling ngầm và lãng phí chu kỳ CPU trên Main Thread
+B. Do giao diện ứng dụng có quá nhiều chữ
+C. Do người dùng cài đặt ứng dụng bằng mạng 4G
+D. Do đặt tên biến trong mã nguồn quá dài
+Giải thích: Bật chip GPS liên tục có thể rút cạn pin điện thoại chỉ trong vài giờ. Ứng dụng chuyên nghiệp luôn sử dụng Fused Location Provider để tự động hạ độ chính xác khi đứng yên, và tận dụng mạng tế bào (Cell towers/Wi-Fi) thay vì bật GPS mọi lúc.
+
+Câu 119: Trong Jetpack Compose, mục đích của việc sử dụng "derivedStateOf" là gì?
+*A. Tối ưu hóa hiệu năng: Chỉ kích hoạt recomposition khi kết quả tính toán từ một hoặc nhiều trạng thái khác thực sự thay đổi vượt qua một ngưỡng logic nhất định
+B. Để tạo ra các biến ngẫu nhiên
+C. Để kết nối đến máy chủ từ xa
+D. Để lưu dữ liệu vào bộ nhớ SharedPreferences
+Giải thích: Ví dụ: hiển thị nút "Cuộn lên đầu trang" khi listState.firstVisibleItemIndex > 0. Nếu không dùng derivedStateOf, mỗi pixel người dùng cuộn sẽ làm composable tính toán lại; derivedStateOf chỉ phát ra tín hiệu khi điều kiện boolean (true/false) chuyển đổi.
+
+Câu 120: Trong iOS, "Core Data" là một công cụ thuộc loại nào?
+*A. Là một Framework quản lý biểu đồ đối tượng (Object Graph Management) và điều phối tính bền vững của dữ liệu (Persistence), có thể sử dụng SQLite làm bộ lưu trữ phía dưới
+B. Là một hệ quản trị cơ sở dữ liệu quan hệ độc lập tương tự MySQL
+C. Là một ngôn ngữ lập trình mới của Apple
+D. Là công cụ tạo biểu đồ phân tích kinh doanh
+Giải thích: Apple luôn nhấn mạnh: Core Data không phải là database. Nó là một giải pháp quản lý vòng đời đối tượng trên bộ nhớ, hỗ trợ hoàn tác (undo/redo), theo dõi thay đổi và có thể lưu trữ dữ liệu xuống SQLite, file XML hoặc in-memory.
+
+Câu 121: Trong React Native, thuộc tính "keyExtractor" trong FlatList có vai trò gì quan trọng?
+*A. Cung cấp một định danh duy nhất (Unique Key) cho mỗi phần tử để React có thể nhận diện chính xác item nào đã thay đổi, được thêm vào hay bị xóa, tối ưu hóa quá trình re-render
+B. Dùng để mở khóa tính năng cao cấp của app
+C. Mã hóa dữ liệu của từng hàng trong danh sách
+D. Đổi màu chữ của phần tử được chọn
+Giải thích: Nếu không có keyExtractor, React Native sẽ mặc định dùng index mảng làm key, dẫn tới việc tái render sai lệch và suy giảm hiệu năng nghiêm trọng khi danh sách có biến động xóa/thêm phần tử ở giữa danh sách.
+
+Câu 122: Khi thiết kế kiến trúc ứng dụng Mobile cho doanh nghiệp quy mô lớn (Enterprise App), phương pháp tiếp cận "Modularization" (chia ứng dụng thành nhiều module độc lập) mang lại lợi ích gì?
+*A. Giảm thiểu xung đột mã nguồn giữa các nhóm lớn, tăng tốc độ biên dịch (nhờ cache build các module không đổi) và hỗ trợ phân phối tính năng theo nhu cầu (Dynamic Feature Delivery)
+B. Bắt buộc người dùng phải cài đặt 10 ứng dụng khác nhau trên điện thoại
+C. Làm tăng gấp đôi dung lượng bộ nhớ RAM của máy
+D. Loại bỏ hoàn toàn nhu cầu kiểm thử phần mềm
+Giải thích: Thay vì 1 cục mã khổng lồ (Monolithic), Modularization chia app theo tính năng (feature-auth, feature-payment) và theo tầng (core-network, core-ui). Các module độc lập giúp hàng chục lập trình viên làm việc song song mà không dẫm chân lên nhau.
+
+Câu 123: Trong Flutter, tại sao lập trình viên TUYỆT ĐỐI NÊN TRÁNH việc khai báo các hàm trả về Widget (ví dụ: Widget _buildHeader()) và thay vào đó nên tách thành một class StatelessWidget riêng biệt?
+*A. StatelessWidget có cơ chế tối ưu hóa vòng đời Element riêng biệt, hỗ trợ const constructor để bỏ qua việc rebuild không cần thiết, và hiển thị rõ ràng trên cây Flutter Inspector
+B. Vì hàm trả về Widget làm cho ứng dụng bị mất màu sắc
+C. Vì hàm trả về Widget không thể truyền tham số
+D. Vì Flutter cấm hoàn toàn việc viết hàm riêng
+Giải thích: Khi widget cha rebuild, các helper method (_buildHeader()) bắt buộc phải chạy lại từ đầu và tái cấp phát toàn bộ cây con bên trong nó. Tách thành StatelessWidget với const constructor cho phép Flutter engine bỏ qua việc build lại nếu props không đổi.
+
+Câu 124: Trong Android, "JobScheduler" hoặc "WorkManager" sử dụng cơ chế "Constraints" để làm gì?
+*A. Đặt điều kiện hệ thống để tác vụ chỉ được phép thực thi khi thỏa mãn (ví dụ: thiết bị đang cắm sạc, đang kết nối Wi-Fi không tốn tiền, pin không ở mức yếu)
+B. Giới hạn số lượng người dùng được mở ứng dụng
+C. Khóa màn hình điện thoại khi ứng dụng đang chạy
+D. Bắt buộc người dùng phải xem quảng cáo
+Giải thích: Constraints đảm bảo việc đồng bộ dữ liệu nặng hoặc sao lưu ảnh chỉ diễn ra khi người dùng cắm sạc qua đêm và có Wi-Fi, bảo vệ toàn diện thời lượng pin và hạn mức 4G/5G của người dùng.
+
+Câu 125: Lỗ hổng bảo mật "Insecure Data Storage" (Lưu trữ dữ liệu không an toàn) thường đứng ở vị trí số mấy trong bảng xếp hạng OWASP Mobile Top 10 rủi ro bảo mật?
+*A. Luôn nằm trong Top đầu (thường là M1 hoặc M2) vì đây là lỗi phổ biến nhất do lập trình viên tiện tay lưu thông tin nhạy cảm vào bộ nhớ máy mà không mã hóa
+B. Nằm ở vị trí cuối cùng không quan trọng
+C. Không bao giờ xuất hiện trong bảng xếp hạng OWASP
+D. Chỉ xuất hiện trên các máy tính để bàn
+Giải thích: OWASP Mobile Top 10 luôn xếp Insecure Data Storage ở vị trí hàng đầu. Kẻ xấu chỉ cần cắm cáp kết nối máy tính hoặc xem file backup là có thể trích xuất toàn bộ token, thông tin thẻ tín dụng của người dùng nếu không được mã hóa chuẩn.
+
+Câu 126: Trong Swift, từ khóa "defer" có tác dụng gì trong việc quản lý tài nguyên (Resource Cleanup)?
+*A. Đảm bảo khối lệnh bên trong nó CHẮC CHẮN sẽ được thực thi ngay trước khi quyền điều khiển rời khỏi phạm vi (scope) hiện tại, bất kể hàm kết thúc bình thường hay do gặp lỗi
+B. Trì hoãn việc chạy ứng dụng trong 5 giây
+C. Tự động xóa các file tạm trong ổ cứng
+D. Bỏ qua việc thực thi đoạn mã tiếp theo
+Giải thích: defer cực kỳ hữu dụng để đóng file, giải phóng con trỏ C, mở khóa Lock (mutex.unlock()) hoặc tắt loading indicator. Nó đảm bảo tài nguyên luôn được dọn dẹp sạch sẽ dù hàm thoát sớm qua câu lệnh return hay throw error.
+
+Câu 127: Khái niệm "Unidirectional Data Flow" (UDF - Luồng dữ liệu một chiều) trong các kiến trúc Redux, MVI, Compose/Flutter mang lại lợi ích lớn nhất là gì?
+*A. Dữ liệu chỉ chảy theo một hướng duy nhất (State truyền xuống dưới, Event gửi lên trên), giúp trạng thái ứng dụng trở nên hoàn toàn có thể dự đoán được (Predictable) và cực kỳ dễ gỡ lỗi
+B. Giúp ứng dụng kết nối mạng một chiều nhanh hơn
+C. Cho phép người dùng chỉ cuộn trang theo một chiều từ trên xuống
+D. Làm cho mã nguồn không thể bị sao chép
+Giải thích: Khi dữ liệu bị thay đổi từ nhiều chiều (Two-way binding), rất khó để biết thành phần nào đã làm biến đổi state dẫn tới bug. Với UDF, mọi biến đổi trạng thái đều đi qua một luồng duy nhất, có thể ghi log lịch sử trạng thái (Time-travel debugging).
+
+Câu 128: Trong Android, "Data Binding" khác với "ViewBinding" ở khả năng cốt lõi nào?
+*A. Data Binding cho phép nhúng trực tiếp biểu thức logic và liên kết dữ liệu hai chiều từ ViewModel vào ngay trong tệp giao diện XML layout; ViewBinding chỉ thuần túy tạo liên kết view an toàn
+B. ViewBinding nặng hơn Data Binding rất nhiều
+C. Data Binding chỉ dùng được trên máy tính bảng
+D. Data Binding không cần bật trong build.gradle
+Giải thích: ViewBinding chỉ thay thế findViewById() với thời gian build nhanh hơn. Data Binding mạnh mẽ hơn nhưng phức tạp hơn, cho phép viết biểu thức động trong XML (như android:text="@{viewModel.userName}") và tự động cập nhật UI khi biến thay đổi.
+
+Câu 129: Khi một ứng dụng di động bị báo cáo có tỷ lệ "Crash Rate" cao bất thường trên các thiết bị hệ điều hành phiên bản cũ (ví dụ Android 7 hoặc iOS 12), nguyên nhân kỹ thuật phổ biến nhất là gì?
+*A. Lập trình viên vô tình sử dụng các API hoặc phương thức mới chỉ hỗ trợ trên các phiên bản OS đời cao mà quên kiểm tra điều kiện tương thích phiên bản (API Level check / @available)
+B. Do các thiết bị đời cũ bị mất sóng vệ tinh
+C. Do người dùng ở các nước châu Âu
+D. Do nhà mạng chặn ứng dụng
+Giải thích: Gọi một API mới trên OS cũ sẽ ném ngoại lệ java.lang.NoClassDefFoundError hoặc NoSuchMethodError dẫn đến văng app lập tức. Kỹ sư chuyên nghiệp luôn dùng Build.VERSION.SDK_INT >= Build.VERSION_CODES... hoặc if #available(iOS 15, *) để bọc các tính năng mới.
+
+Câu 130: Câu hỏi phỏng vấn System Design: Khi thiết kế hệ thống Offline Sync (Đồng bộ ngoại tuyến) cho ứng dụng Mobile, cấu trúc hàng đợi "Sync Queue" trên thiết bị nên lưu trữ ở đâu để đảm bảo an toàn tuyệt đối khi app bị tắt đột ngột?
+*A. Lưu trữ bền vững trong cơ sở dữ liệu cục bộ (SQLite / Room / CoreData / Realm) với cờ trạng thái rõ ràng (PENDING, SYNCING, FAILED, RETRY_COUNT)
+B. Lưu trữ trong biến toàn cục RAM (In-memory Array)
+C. Lưu trữ trong clipboard của bàn phím
+D. Lưu trữ trên máy chủ đám mây
+Giải thích: Nếu chỉ lưu hàng đợi sync trong RAM, khi người dùng tắt app hoặc máy hết pin tắt nguồn, toàn bộ hành động người dùng vừa tạo offline (như đơn hàng, ghi chú) sẽ biến mất vĩnh viễn. Bắt buộc phải ghi ngay vào Persistent Storage và xử lý tuần tự qua WorkManager / Background Task.

@@ -1,0 +1,735 @@
+Câu 1: Dự án GreenKitchen được xây dựng dựa trên framework và ngôn ngữ lập trình nào?
+*A. Flutter và Dart
+B. React Native và TypeScript
+C. Android Native và Kotlin
+D. Ionic và JavaScript
+Giải thích: GreenKitchen là dự án ứng dụng di động được xây dựng bằng Flutter framework và ngôn ngữ lập trình Dart theo khai báo trong pubspec.yaml.
+
+
+Câu 2: Phiên bản Dart SDK tối thiểu được chỉ định trong file pubspec.yaml của GreenKitchen là bao nhiêu?
+A. ^2.19.0
+B. ^3.0.0
+*C. ^3.8.1
+D. ^3.10.0
+Giải thích: Trong pubspec.yaml, trường environment quy định sdk: ^3.8.1.
+
+Câu 3: GreenKitchen sử dụng gói (package) nào để quản lý trạng thái chuyển đổi giao diện sáng/tối (Dark/Light mode)?
+*A. provider (^6.1.5+1)
+B. flutter_bloc
+C. get
+D. riverpod
+Giải thích: Dự án sử dụng Provider (^6.1.5+1) kết hợp với ChangeNotifier (ThemeNotifier) để quản lý state giao diện.
+
+Câu 4: Dịch vụ cơ sở dữ liệu đám mây NoSQL chính được GreenKitchen sử dụng để lưu trữ công thức món ăn là gì?
+A. Realtime Database
+*B. Cloud Firestore (cloud_firestore)
+C. MongoDB Atlas
+D. Supabase Database
+Giải thích: GreenKitchen sử dụng cloud_firestore (^5.6.5) làm cơ sở dữ liệu NoSQL chính cho công thức món ăn, người dùng, yêu thích và lịch sử.
+
+Câu 5: Trong hàm main() của lib/main.dart, lệnh nào bắt buộc phải được gọi trước khi khởi tạo Firebase.initializeApp()?
+A. Firebase.setCrashlyticsCollectionEnabled(true)
+*B. WidgetsFlutterBinding.ensureInitialized()
+C. runApp(const MyApp())
+D. SystemChrome.setPreferredOrientations()
+Giải thích: WidgetsFlutterBinding.ensureInitialized() cần được gọi đầu tiên để liên kết các dịch vụ của Flutter Engine với các plugin native trước khi gọi hàm bất đồng bộ Firebase.
+
+Câu 6: Package nào được GreenKitchen sử dụng để dịch tên món ăn và hướng dẫn nấu ăn từ tiếng Anh sang tiếng Việt?
+A. flutter_translate
+B. easy_localization
+*C. translator (^1.0.4+1)
+D. google_mlkit_translation
+Giải thích: GreenKitchen sử dụng thư viện translator (dựa trên GoogleTranslator) để dịch tự động tên món ăn, hướng dẫn nấu và danh sách nguyên liệu.
+
+Câu 7: Nguồn API công khai bên ngoài được GreenKitchen tích hợp để lấy danh mục món ăn quốc tế và món ăn Việt Nam là gì?
+A. Spoonacular API
+B. Edamam Recipe API
+*C. TheMealDB API (https://www.themealdb.com/api/json/v1/1)
+D. Foodish API
+Giải thích: Dự án tích hợp TheMealDB API qua endpoint https://www.themealdb.com/api/json/v1/1 trong ApiService và RecipeDetailService.
+
+Câu 8: Thư viện nào được sử dụng để tải và lưu vào bộ nhớ đệm (cache) hình ảnh món ăn từ internet giúp tránh lag giật giao diện?
+A. image_picker
+*B. cached_network_image (^3.3.0)
+C. flutter_image
+D. transparent_image
+Giải thích: cached_network_image được dùng để load ảnh thumbnail của món ăn và tự động cache vào bộ nhớ máy, có hiển thị placeholder và errorWidget.
+
+Câu 9: Trong file lib/widgets/ThemeApp.dart, ThemeNotifier kế thừa từ class nào để phát tín hiệu thông báo cho UI cập nhật?
+A. State
+B. InheritedWidget
+*C. ChangeNotifier
+D. ValueNotifier
+Giải thích: ThemeNotifier kế thừa ChangeNotifier và gọi hàm notifyListeners() mỗi khi thuộc tính _isDarkMode thay đổi.
+
+Câu 10: Trạng thái cài đặt Dark Mode của người dùng được GreenKitchen lưu trữ bền vững trên thiết bị bằng package nào?
+A. sqflite
+B. hive
+*C. shared_preferences (^2.2.0)
+D. path_provider
+Giải thích: ThemeNotifier sử dụng SharedPreferences để lưu giá trị boolean 'isDarkMode' xuống bộ nhớ thiết bị.
+
+Câu 11: Thanh điều hướng phía dưới (bottom navigation bar) với icon nhô lên ở trang chủ được hiện thực bằng thư viện nào?
+A. bottom_navy_bar
+B. curved_navigation_bar
+*C. convex_bottom_bar (^3.2.0)
+D. google_nav_bar
+Giải thích: Trong pubspec.yaml có dependency convex_bottom_bar (^3.2.0) để tạo thanh điều hướng lồi độc đáo.
+
+Câu 12: Thư viện nào được dùng trong GreenKitchen để mở link video hướng dẫn nấu ăn trên YouTube ra ứng dụng ngoài trình duyệt?
+*A. url_launcher (^6.3.2)
+B. youtube_player_flutter
+C. webview_flutter
+D. video_player
+Giải thích: GreenKitchen sử dụng url_launcher để mở đường link video Youtube của món ăn (strYoutube).
+
+Câu 13: Trong Firestore, collection nào được dùng để lưu danh sách các công thức món ăn do người dùng gửi lên?
+A. posts
+B. meals_data
+*C. recipes
+D. food_items
+Giải thích: Trong FirebaseService, các công thức được thêm vào và truy vấn từ collection 'recipes'.
+
+Câu 14: Khi người dùng thông thường gửi một công thức nấu ăn mới qua AddRecipeFormScreen, trạng thái (status) mặc định của món ăn là gì?
+A. approved
+*B. pending
+C. draft
+D. active
+Giải thích: Món ăn của người dùng đăng lên mặc định có trạng thái status = 'pending' để chờ Admin duyệt.
+
+Câu 15: Trong FirebaseService, hàm getPendingRecipes() thực hiện truy vấn điều kiện như thế nào trên Firestore?
+*A. _db.collection('recipes').where('status', isEqualTo: 'pending').get()
+B. _db.collection('recipes').where('approved', isEqualTo: false).get()
+C. _db.collection('recipes').orderBy('created_at').get()
+D. _db.collection('pending_recipes').get()
+Giải thích: Hàm truy vấn collection 'recipes' với điều kiện .where('status', isEqualTo: 'pending').
+
+Câu 16: Tại sao trong các hàm getPendingRecipes() và getApprovedRecipes(), tác giả lại bỏ .orderBy('created_at') trên Firestore và sắp xếp bằng Dart code tại Client?
+*A. Để tránh lỗi yêu cầu tạo Composite Index (chỉ mục phức hợp) trên Firebase Console
+B. Vì Firestore không hỗ trợ sắp xếp theo ngày tháng
+C. Để tiết kiệm chi phí đọc dữ liệu của Firebase
+D. Vì Firestore chỉ cho phép sắp xếp theo trường ID
+Giải thích: Khi kết hợp truy vấn lọc .where() trên một trường và .orderBy() trên một trường khác, Firestore bắt buộc phải tạo Composite Index thủ công, sắp xếp tại Client giúp app chạy ngay mà không crash lỗi index.
+
+Câu 17: Trong hàm updateRecipeStatus(String id, String status) của FirebaseService, trường nào được cập nhật kèm theo?
+A. updated_at: DateTime.now()
+*B. status: status và is_notified: 0
+C. admin_id: 'admin'
+D. is_deleted: false
+Giải thích: Khi cập nhật trạng thái sang 'approved' hoặc 'rejected', FirebaseService đồng thời set 'is_notified': 0 để hệ thống gửi thông báo cho tác giả bài viết.
+
+Câu 18: Thao tác xóa một công thức món ăn trong FirebaseService được thực hiện như thế nào?
+*A. _db.collection('recipes').doc(id).delete()
+B. _db.collection('recipes').delete(id)
+C. _db.collection('recipes').doc(id).update({'is_deleted': true})
+D. _db.collection('recipes').remove(id)
+Giải thích: Hàm deleteRecipe gọi trực tiếp phương thức .delete() trên document tham chiếu _db.collection('recipes').doc(id).
+
+Câu 19: Trong ApiService, endpoint nào của TheMealDB được sử dụng để lấy danh sách các món ăn Việt Nam?
+A. /search.php?s=Vietnam
+*B. /filter.php?a=Vietnamese
+C. /categories.php?c=Vietnamese
+D. /lookup.php?area=VN
+Giải thích: Endpoint chuẩn của TheMealDB để lọc theo quốc gia là /filter.php?a=Vietnamese.
+
+Câu 20: Khi gọi endpoint filter.php?a=Vietnamese từ TheMealDB, một vấn đề phát sinh với dữ liệu trả về là gì?
+A. Không có hình ảnh món ăn
+B. Không có tên món ăn
+*C. API không trả về trường quốc gia (strArea)
+D. Món ăn trả về bị trùng lặp ID
+Giải thích: API filter.php của TheMealDB chỉ trả về idMeal, strMeal, strMealThumb mà không có strArea, vì vậy ApiService phải tự gán meal['strArea'] = 'Vietnamese'.
+
+Câu 21: Trong ApiService, trước khi gửi từ khóa tìm kiếm tiếng Việt lên TheMealDB, hàm searchMeals thực hiện bước nào trước tiên?
+A. Xóa dấu tiếng Việt
+*B. Dịch từ khóa từ tiếng Việt sang tiếng Anh qua GoogleTranslator
+C. Chuyển từ khóa thành chữ in hoa
+D. Gọi API tìm kiếm trực tiếp bằng tiếng Việt
+Giải thích: TheMealDB lưu dữ liệu bằng tiếng Anh, nên hàm searchMeals dịch từ khóa từ 'vi' sang 'en' trước khi gửi request.
+
+Câu 22: Trong hàm _translateMealList() của ApiService, từ điển thủ công (manualDictionary) được dùng để làm gì?
+*A. Sửa các lỗi dịch thuật sai ngữ nghĩa của Google Translate đối với các món đặc thù như Ezme, Migas, Kebab, Flan
+B. Dịch toàn bộ hàng nghìn món ăn có trên thế giới
+C. Chuyển đổi công thức nấu ăn thành thơ
+D. Thay thế link ảnh món ăn
+Giải thích: Google Translate thường dịch sai các tên món ăn bản địa (VD dịch Ezme thành từ ngữ lạ), tác giả dùng manualDictionary để gán tên tiếng Việt chuẩn xác.
+
+Câu 23: Danh sách blacklist trong hàm _translateMealList() bao gồm những từ khóa nào để loại bỏ kết quả dịch phi ẩm thực?
+*A. ['dầu khí', 'nghiền', 'máy móc', 'hệ thống', 'dữ liệu']
+B. ['ớt', 'tiêu', 'hành', 'tỏi']
+C. ['thịt bò', 'thịt heo', 'thịt gà']
+D. ['đường', 'muối', 'bột ngọt']
+Giải thích: Danh sách blacklist lọc các từ khóa vô nghĩa hoặc dịch máy móc sai lệch sang lĩnh vực công nghiệp/dữ liệu.
+
+Câu 24: Khi phân tích chi tiết công thức nấu ăn trong RecipeDetailService, TheMealDB cung cấp tối đa bao nhiêu trường nguyên liệu (strIngredient)?
+A. 10 nguyên liệu
+B. 15 nguyên liệu
+*C. 20 nguyên liệu (từ strIngredient1 đến strIngredient20)
+D. Không giới hạn số lượng
+Giải thích: Cấu trúc JSON của TheMealDB quy định cố định 20 cặp trường: strIngredient1-20 và strMeasure1-20.
+
+Câu 25: Trong RecipeDetailService, kỹ thuật nào được áp dụng để dịch đồng thời Tên món ăn và Hướng dẫn nấu nhằm tiết kiệm thời gian?
+A. Gọi hai vòng lặp lồng nhau
+*B. Future.wait([translator.translate(...), translator.translate(...)])
+C. Dùng Isolate chạy nền
+D. Dùng StreamBuilder
+Giải thích: Hàm sử dụng Future.wait để kích hoạt 2 tác vụ dịch song song trên luồng mạng, rút ngắn thời gian phản hồi.
+
+Câu 26: Collection 'favorites' trong Firestore lưu trữ những thông tin nào của món ăn yêu thích?
+*A. user_id, meal_id, meal_name, meal_thumb, created_at
+B. chỉ lưu meal_id và user_id
+C. lưu toàn bộ các bước nấu ăn và video
+D. lưu email và mật khẩu của người dùng
+Giải thích: FavoriteService lưu trữ user_id, meal_id, meal_name, meal_thumb và thời điểm thêm created_at.
+
+Câu 27: Phương thức nào được FavoriteService sử dụng để kiểm tra một món ăn đã được người dùng thích hay chưa?
+*A. Truy vấn .where('user_id', isEqualTo: userId).where('meal_id', isEqualTo: mealId).limit(1).get()
+B. Tải toàn bộ collection về và duyệt vòng lặp for
+C. Đọc từ file SharedPreferences trên máy
+D. Gửi request lên TheMealDB
+Giải thích: FavoriteService truy vấn Firestore với 2 điều kiện user_id và meal_id kèm theo .limit(1) để tối ưu chi phí đọc dữ liệu.
+
+Câu 28: Trong HistoryService, khi người dùng xem lại một món ăn ĐÃ TỒN TẠI trong lịch sử xem, hệ thống xử lý như thế nào?
+A. Tạo thêm một bản ghi mới trùng lặp
+B. Bỏ qua và không làm gì cả
+*C. Cập nhật trường viewed_at bằng FieldValue.serverTimestamp() trên document cũ
+D. Xóa bản ghi cũ và không lưu lại
+Giải thích: Nếu món đã có trong lịch sử, HistoryService gọi update({'viewed_at': FieldValue.serverTimestamp()}) để cập nhật thời gian xem mới nhất giúp món đó tự động nhảy lên đầu danh sách.
+
+Câu 29: Để xóa toàn bộ lịch sử xem của một người dùng mà không cần gửi từng lệnh delete riêng lẻ, HistoryService sử dụng cơ chế nào?
+*A. WriteBatch (_db.batch()) và commit()
+B. Vòng lặp await document.delete()
+C. Lệnh truncate collection
+D. Gọi Cloud Function
+Giải thích: HistoryService khởi tạo _db.batch(), thêm các lệnh batch.delete(doc.reference) rồi gọi await batch.commit() để xóa hàng loạt trong 1 giao dịch duy nhất.
+
+Câu 30: Trong Firestore, FieldValue.serverTimestamp() có tác dụng gì?
+A. Lấy thời gian từ đồng hồ của thiết bị người dùng
+*B. Yêu cầu máy chủ Firestore tự động điền thời gian theo múi giờ chuẩn UTC của server
+C. Tạo ra một số ngẫu nhiên đại diện cho ID
+D. Định dạng ngày tháng thành chuỗi dd/MM/yyyy
+Giải thích: FieldValue.serverTimestamp() đảm bảo tính nhất quán của thời gian, tránh trường hợp người dùng chỉnh sửa ngày giờ trên điện thoại gây sai lệch dữ liệu.
+
+Câu 31: Màn hình LoginScreen xử lý đăng nhập bằng cách nào trong mã nguồn GreenKitchen?
+A. Chỉ sử dụng FirebaseAuth.instance.signInWithEmailAndPassword
+*B. Truy vấn collection 'users' với username và password thông qua FirebaseService.instance.login()
+C. Đăng nhập ẩn danh Anonymous
+D. Sử dụng tài khoản Google Sign-In
+Giải thích: Trong file firebase_service.dart, hàm login thực hiện truy vấn Firestore collection 'users' so khớp trường username và password.
+
+Câu 32: Bảng/Collection 'users' trong Firestore của GreenKitchen có trường 'role' dùng để làm gì?
+A. Lưu họ và tên đầy đủ của người dùng
+*B. Phân quyền người dùng (ví dụ: 'admin' hoặc 'user')
+C. Lưu số lượng công thức đã nấu
+D. Lưu cấp độ thành viên VIP
+Giải thích: Trường 'role' xác định quyền của tài khoản, giúp ứng dụng điều hướng hoặc hiển thị các tính năng dành riêng cho Admin như duyệt bài viết.
+
+Câu 33: Trên màn hình AdminApprovalScreen, nút duyệt bài viết hiển thị biểu tượng nào và kích hoạt hành động gì?
+*A. Biểu tượng Icons.check_circle màu xanh lá, gọi hàm updateRecipeStatus(docId, 'approved')
+B. Biểu tượng Icons.thumb_up, gửi email cho người dùng
+C. Biểu tượng Icons.save, tải ảnh về máy
+D. Biểu tượng Icons.share, chia sẻ lên Facebook
+Giải thích: Nút duyệt là IconButton với Icons.check_circle màu xanh, khi nhấn sẽ cập nhật status của recipe thành 'approved'.
+
+Câu 34: Khi Admin từ chối một công thức trong AdminApprovalScreen, trạng thái của recipe được cập nhật thành gì?
+A. deleted
+*B. rejected
+C. cancelled
+D. hidden
+Giải thích: Hàm _reject trong AdminApprovalScreen gọi FirebaseService.instance.updateRecipeStatus(id, 'rejected').
+
+Câu 35: Trên màn hình AdminApprovalScreen, nút FloatingActionButton dùng để làm gì?
+A. Xóa tất cả các bài chờ duyệt
+B. Xuất dữ liệu ra file Excel
+*C. Mở màn hình AdminAddRecipeScreen để Admin đăng bài trực tiếp mà không cần qua bước duyệt
+D. Chuyển đổi ngôn ngữ app
+Giải thích: FloatingActionButton mở AdminAddRecipeScreen cho phép Admin chủ động đăng bài mới với trạng thái mặc định là 'approved'.
+
+Câu 36: Widget nào được sử dụng trong AdminApprovalScreen để quản lý danh sách các món ăn chờ duyệt với đường kẻ phân cách giữa các item?
+*A. ListView.separated
+B. SingleChildScrollView
+C. Column
+D. GridView.count
+Giải thích: AdminApprovalScreen sử dụng ListView.separated với separatorBuilder: (context, index) => const Divider(height: 1).
+
+Câu 37: Trong file lib/main.dart, màu nền (scaffoldBackgroundColor) của chế độ Dark Mode được thiết lập mã hex là gì?
+A. Colors.black (#000000)
+*B. Color(0xFF121212)
+C. Color(0xFF212121)
+D. Color(0xFF303030)
+Giải thích: darkTheme quy định scaffoldBackgroundColor: const Color(0xFF121212) để tạo giao diện nền xám đen chuẩn Material Design.
+
+Câu 38: Thuộc tính canvasColor trong darkTheme của main.dart được cấu hình nhằm mục đích gì?
+A. Đổi màu chữ của ứng dụng
+*B. Khắc phục hiện tượng các menu/dropdown bị chuyển thành màu trắng khi bật chế độ tối
+C. Thay đổi màu thanh thông báo trạng thái
+D. Đổi màu viền của các nút bấm
+Giải thích: Tác giả ghi chú rõ: 'canvasColor: const Color(0xFF121212), // Thêm dòng này để fix các phần menu bị trắng'.
+
+Câu 39: Trong RecipeDetailScreen, nếu người dùng nhấn vào nút mở video YouTube mà máy không cài sẵn app YouTube, thư viện url_launcher sẽ xử lý thế nào?
+A. Báo lỗi và crash ứng dụng ngay lập tức
+*B. Mở đường link trên trình duyệt web mặc định của thiết bị (hoặc in-app webview)
+C. Tự động tải video về máy
+D. Yêu cầu người dùng nhập mật khẩu
+Giải thích: url_launcher sẽ tự động mở liên kết qua trình duyệt web nếu không có ứng dụng chuyên dụng nào xử lý intent youtube://.
+
+Câu 40: Để lấy thông tin các bài viết đã được duyệt hoặc từ chối mà người dùng chưa đọc, hàm getUnreadNotifications() sử dụng toán tử lọc nào của Firestore?
+*A. whereIn: ['approved', 'rejected']
+B. arrayContains: 'notifications'
+C. isEqualTo: 'all'
+D. isNotEqualTo: 'pending'
+Giải thích: Hàm truy vấn .where('status', whereIn: ['approved', 'rejected']) kết hợp với .where('is_notified', isEqualTo: 0).
+
+Câu 41: Khi người dùng xem danh sách thông báo, hàm markAsNotified() thực hiện cập nhật gì trên Firestore?
+A. Xóa document thông báo
+*B. Cập nhật trường is_notified = 1 cho tất cả các bài viết tương ứng của user
+C. Đổi role của user thành member
+D. Gửi email xác nhận
+Giải thích: Hàm duyệt qua các doc và cập nhật update({'is_notified': 1}) để đánh dấu các thông báo đã được đọc.
+
+Câu 42: Model Meal trong lib/models/meal.dart thường chứa các trường dữ liệu nào sau đây?
+*A. id, title, imageUrl, ingredients, instructions
+B. username, password, email, role
+C. token, refreshToken, expiredTime
+D. latitude, longitude, address
+Giải thích: Model Meal đại diện cho thông tin một món ăn gồm mã định danh, tiêu đề, đường dẫn hình ảnh, nguyên liệu và hướng dẫn chế biến.
+
+Câu 43: Widget nào trong Flutter được dùng để bo tròn các góc của hình ảnh món ăn trong ListTile của GreenKitchen?
+A. Container
+*B. ClipRRect (với BorderRadius.circular)
+C. Card
+D. CircleAvatar
+Giải thích: Đoạn code dùng ClipRRect(borderRadius: BorderRadius.circular(8), child: CachedNetworkImage(...)) để bo góc ảnh 8px.
+
+Câu 44: Trong Flutter, từ khóa async/await được sử dụng để làm gì trong các hàm gọi API của GreenKitchen?
+*A. Xử lý các tác vụ bất đồng bộ (Asynchronous) mà không làm đóng băng (freeze) giao diện người dùng
+B. Tăng tốc độ xung nhịp CPU của máy
+C. Đảm bảo code chạy tuần tự trên luồng giao diện chính
+D. Chuyển đổi mã Dart sang mã C++
+Giải thích: async/await giúp xử lý các lệnh I/O mạng hoặc truy vấn cơ sở dữ liệu bất đồng bộ mà vẫn giữ cho UI luôn mượt mà.
+
+Câu 45: Khi gọi FutureBuilder<List<Map<String, dynamic>>> trong AdminApprovalScreen, snapshot.connectionState == ConnectionState.waiting biểu thị trạng thái gì?
+A. Dữ liệu đã tải xong và có lỗi
+*B. Đang trong quá trình chờ dữ liệu từ Firestore trả về, hiển thị CircularProgressIndicator
+C. Đã mất kết nối mạng hoàn toàn
+D. Không tìm thấy document nào
+Giải thích: ConnectionState.waiting nghĩa là Future đang chạy, lúc này giao diện hiển thị vòng quay tròn tải dữ liệu.
+
+Câu 46: Trong State của một StatefulWidget, lệnh nào được gọi để thông báo cho Flutter vẽ lại (re-render) giao diện sau khi thay đổi dữ liệu?
+A. notifyAll()
+B. updateUI()
+*C. setState(() {})
+D. refresh()
+Giải thích: Trong StatefulWidget, gọi setState(() {}) báo hiệu cho framework rằng trạng thái nội tại của đối tượng State đã thay đổi, kích hoạt hàm build() chạy lại.
+
+Câu 47: Thuộc tính primaryColor trong AdminApprovalScreen được xác định linh hoạt theo theme như thế nào?
+*A. isDark ? const Color(0xFF2E7D32) : Colors.orange
+B. isDark ? Colors.blue : Colors.red
+C. Luôn luôn là Colors.green
+D. isDark ? Colors.white : Colors.black
+Giải thích: Code trong AdminApprovalScreen xác định: final primaryColor = isDark ? const Color(0xFF2E7D32) : Colors.orange.
+
+Câu 48: Để tránh trường hợp cập nhật State khi widget đã bị hủy khỏi cây widget (unmounted), đoạn code sau hàm async thường kiểm tra điều kiện gì?
+A. if (context != null)
+*B. if (mounted)
+C. if (this.isAlive)
+D. if (widget.isValid)
+Giải thích: Biến boolean 'mounted' cho biết State object hiện có đang nằm trong cây widget hay không trước khi gọi setState hoặc ScaffoldMessenger.of(context).
+
+Câu 49: Snack-bar thông báo sau khi Admin duyệt món ăn hiển thị nội dung gì?
+*A. "🔥 Đã duyệt món ăn lên hệ thống!"
+B. "Chúc mừng bạn đã tạo tài khoản thành công!"
+C. "Lỗi kết nối cơ sở dữ liệu!"
+D. "Món ăn đã được lưu vào bộ nhớ tạm!"
+Giải thích: Trong hàm _approve có lệnh: ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("🔥 Đã duyệt món ăn lên hệ thống!"))).
+
+Câu 50: Khi người dùng nhấn vào một món ăn trong danh sách chờ duyệt của AdminApprovalScreen, màn hình nào sẽ được mở ra để xem trước?
+A. AllMealsScreen
+B. EditRecipeScreen
+*C. RecipeDetailScreen (với tham số mealId)
+D. HomeScreen
+Giải thích: Khi nhấn onTap, Navigator.push đưa người dùng đến RecipeDetailScreen(key: UniqueKey(), mealId: docId) để xem chi tiết món trước khi quyết định duyệt.
+
+Câu 51: Trong GreenKitchen, file firebase_options.dart được tạo ra tự động bởi công cụ CLI nào của Firebase?
+A. npm install firebase
+B. gcloud sdk
+*C. FlutterFire CLI (lệnh flutterfire configure)
+D. Android Studio Firebase Assistant
+Giải thích: File firebase_options.dart chứa class DefaultFirebaseOptions được sinh ra tự động bởi FlutterFire CLI khi cấu hình kết nối dự án.
+
+Câu 52: Trong file lib/models/category_model.dart, cấu trúc của Category thường chứa các trường nào?
+*A. idCategory, strCategory, strCategoryThumb, strCategoryDescription
+B. name, age, address
+C. categoryCode, barcode, price
+D. createdDate, modifiedDate, author
+Giải thích: CategoryModel khớp với JSON trả về từ API categories của TheMealDB gồm id, tên danh mục, link ảnh và mô tả.
+
+Câu 53: Kỹ thuật factory constructor thường được sử dụng trong các Model Dart của GreenKitchen nhằm mục đích gì?
+A. Tạo ra một singleton duy nhất
+*B. Khởi tạo đối tượng Model từ một Map (thường là JSON giải mã từ API hoặc Firestore Document)
+C. Xóa dữ liệu cũ trong RAM
+D. Ép kiểu dữ liệu sang String
+Giải thích: factory Model.fromJson(Map<String, dynamic> json) là chuẩn thiết kế trong Flutter để parse dữ liệu JSON sang Model object.
+
+Câu 54: Đoạn mã int limit = meals.length > 12 ? 12 : meals.length; trong hàm _translateMealList() của ApiService có tác dụng gì?
+A. Giới hạn danh sách chỉ hiển thị đúng 12 ký tự
+*B. Giới hạn chỉ dịch tối đa 12 món ăn đầu tiên để tránh bị Google Translate chặn IP (Rate limit) và tăng tốc độ load
+C. Bỏ qua 12 món ăn đầu tiên
+D. Chia danh sách thành 12 trang
+Giải thích: Dịch qua GoogleTranslator bằng HTTP request dễ bị rate limit và làm chậm giao diện, việc giới hạn 12 món đầu tiên giúp tối ưu thời gian phản hồi.
+
+Câu 55: Trong file pubspec.yaml, mục assets dùng để khai báo tài nguyên tĩnh nào của ứng dụng?
+*A. Hình ảnh tĩnh (PNG, JPG, SVG), fonts chữ hoặc file JSON nội bộ
+B. Các thư viện Java của Android
+C. Danh sách người dùng trong hệ thống
+D. Cấu hình máy chủ backend
+Giải thích: Mục assets trong pubspec.yaml dùng để đóng gói các tệp hình ảnh, biểu tượng, video hoặc font chữ vào file cài đặt ứng dụng (APK/IPA).
+
+Câu 56: Khi thêm một recipe mới trong FirebaseService.insertRecipe(row), nếu không truyền giá trị cho 'is_notified', giá trị mặc định được gán là gì?
+A. 1
+*B. 0
+C. null
+D. -1
+Giải thích: Code trong insertRecipe ghi: row['is_notified'] = row['is_notified'] ?? 0.
+
+Câu 57: Trong RecipeDetailScreen, danh sách nguyên liệu và định lượng được ghép nối như thế nào từ TheMealDB?
+*A. Ghép chuỗi strMeasure (định lượng) và strIngredient (tên nguyên liệu), ví dụ: "250g Beef"
+B. Chỉ lấy tên nguyên liệu, bỏ qua định lượng
+C. Nhân đôi số lượng nguyên liệu
+D. Chuyển đổi định lượng sang đơn vị Ounce
+Giải thích: Code xử lý: String fullText = "${measure?.trim() ?? ""} ${ingredient.trim()}".trim() rồi dịch sang tiếng Việt.
+
+Câu 58: Để kiểm tra thiết bị có đang kết nối Internet hay không trong ứng dụng Flutter, developer thường sử dụng package phổ biến nào?
+A. shared_preferences
+*B. connectivity_plus
+C. flutter_lints
+D. convex_bottom_bar
+Giải thích: connectivity_plus là thư viện tiêu chuẩn để kiểm tra trạng thái mạng (Wi-Fi, 4G/5G hoặc không có mạng).
+
+Câu 59: Thuộc tính padding: const EdgeInsets.only(top: 10, bottom: 80) trong ListView của AdminApprovalScreen có ý nghĩa gì?
+A. Làm cho danh sách xoay ngang
+*B. Tạo khoảng trống 80px ở đáy danh sách để các item không bị che khuất bởi nút bấm nổi FloatingActionButton
+C. Tăng kích thước font chữ của bài viết
+D. Tự động ẩn thanh cuộn
+Giải thích: Tác giả chú thích: '// Cách đáy để không bị đè nút FAB', giúp người dùng cuộn đến item cuối cùng mà không bị nút bấm che mất.
+
+Câu 60: Trong Flutter, ScaffoldMessenger.of(context).showSnackBar() được dùng để làm gì?
+*A. Hiển thị một thanh thông báo nhỏ xuất hiện từ phía dưới đáy màn hình trong thời gian ngắn
+B. Chuyển hướng sang một màn hình hoàn toàn mới
+C. Khóa màn hình lại và yêu cầu nhập mã PIN
+D. Tắt ứng dụng
+Giải thích: SnackBar là widget thông báo nhanh các thao tác vừa thực hiện (như "Đã duyệt bài", "Đã xóa") cho người dùng.
+
+Câu 61: Trong màn hình change_password_screen.dart, trước khi cập nhật mật khẩu mới, hệ thống cần kiểm tra điều gì?
+A. Số dư tài khoản của người dùng
+*B. Xác thực mật khẩu cũ có trùng khớp và mật khẩu mới đủ độ dài an toàn (kèm nhập lại mật khẩu)
+C. Tốc độ mạng Wi-Fi
+D. Thời lượng pin của điện thoại
+Giải thích: Quy trình đổi mật khẩu chuẩn luôn yêu cầu nhập đúng mật khẩu hiện tại, mật khẩu mới và xác nhận mật khẩu mới.
+
+Câu 62: Trong Firestore, phương thức .get() trên một DocumentReference trả về đối tượng nào?
+A. QuerySnapshot
+*B. DocumentSnapshot
+C. Stream<DocumentSnapshot>
+D. List<Map<String, dynamic>>
+Giải thích: Truy vấn một document cụ thể (.doc(id).get()) trả về DocumentSnapshot; còn truy vấn trên Collection (.collection().get()) trả về QuerySnapshot.
+
+Câu 63: Làm thế nào để kiểm tra một DocumentSnapshot có tồn tại dữ liệu trên Firestore hay không?
+*A. doc.exists
+B. doc.hasData()
+C. doc != null
+D. doc.data.length > 0
+Giải thích: DocumentSnapshot cung cấp getter boolean 'exists' để kiểm tra xem tài liệu đó có thực sự tồn tại trên database hay không.
+
+Câu 64: Trong Dart, kiểu dữ liệu Map<String, dynamic> đại diện cho cấu trúc dữ liệu nào?
+A. Một danh sách mảng chỉ chứa số nguyên
+*B. Một tập hợp các cặp khóa - giá trị (Key - Value), trong đó Key là chuỗi (String) và Value có thể là bất kỳ kiểu dữ liệu nào
+C. Một tập hợp các giá trị không trùng lặp (Set)
+D. Một hàm xử lý bất đồng bộ
+Giải thích: Map<String, dynamic> là cấu trúc dictionary ánh xạ từ khóa (chuỗi) sang giá trị đa hình, chuẩn cho việc biểu diễn JSON hoặc Firestore document.
+
+Câu 65: Khi một tác vụ bất đồng bộ gặp lỗi trong khối try, khối nào sẽ tiếp nhận và xử lý lỗi đó?
+A. finally
+*B. catch (e)
+C. then
+D. throw
+Giải thích: Cú pháp chuẩn xử lý ngoại lệ trong Dart là try { ... } catch (e) { ... } finally { ... }.
+
+Câu 66: Để kiểm tra quyền Admin khi người dùng truy cập một tính năng quản trị, cách kiểm tra nào sau đây thường được dùng?
+*A. if (currentUser['role'] == 'admin') { ... } else { báo lỗi không có quyền }
+B. if (currentUser['username'] == 'admin')
+C. if (currentUser['id'] == 1)
+D. if (currentUser['email'].contains('@'))
+Giải thích: Phân quyền theo trường 'role' (Role-based access control) là cách chuẩn và an toàn nhất.
+
+Câu 67: Trong Flutter, widget GestureDetector hoặc InkWell được dùng để làm gì?
+*A. Lắng nghe các cử chỉ chạm của người dùng như nhấn (tap), nhấn đúp (double tap), nhấn giữ (long press)
+B. Tự động vẽ hình dạng tròn hoặc vuông
+C. Tải video từ mạng về
+D. Chỉnh sửa kích thước văn bản
+Giải thích: GestureDetector và InkWell bọc ngoài widget khác để bắt sự kiện tương tác của người dùng, InkWell có thêm hiệu ứng gợn sóng (ripple effect).
+
+Câu 68: Thuộc tính debugShowCheckedModeBanner: false trong MaterialApp của main.dart có tác dụng gì?
+A. Tắt hoàn toàn việc kiểm tra lỗi
+*B. Ẩn biểu tượng ruy-băng "DEBUG" màu đỏ ở góc trên bên phải màn hình khi chạy chế độ debug
+C. Bật chế độ tối màn hình
+D. Khóa màn hình xoay ngang
+Giải thích: debugShowCheckedModeBanner: false giúp ẩn dải băng chữ DEBUG ở góc phải trên màn hình để giao diện trông giống bản phát hành chính thức hơn.
+
+Câu 69: Trong file analysis_options.yaml của dự án Flutter, bộ quy tắc nào thường được áp dụng để kiểm tra chuẩn mực code (linting)?
+A. effective_dart
+*B. flutter_lints
+C. pedantic
+D. clean_code
+Giải thích: Các dự án Flutter hiện đại mặc định sử dụng package flutter_lints để phát hiện các lỗi cú pháp và style code chưa chuẩn.
+
+Câu 70: Khi hiển thị hình ảnh từ mạng bằng CachedNetworkImage, nếu đường dẫn ảnh bị hỏng (404), widget nào trong cấu hình sẽ được hiển thị?
+A. placeholder
+*B. errorWidget: (context, url, error) => const Icon(Icons.error)
+C. imageBuilder
+D. progressIndicatorBuilder
+Giải thích: errorWidget là callback được kích hoạt khi việc load ảnh thất bại, thường hiển thị Icon báo lỗi hoặc ảnh mặc định.
+
+Câu 71: Trong màn hình recipe_details_screen.dart, danh sách các bước nấu ăn (instructions) thường được hiển thị bằng widget nào để người dùng dễ đọc?
+*A. SingleChildScrollView chứa Text hoặc ListView.builder
+B. Row
+C. Stack
+D. Wrap
+Giải thích: Vì nội dung hướng dẫn nấu ăn thường rất dài, cần bọc trong SingleChildScrollView hoặc ListView để màn hình có thể cuộn được mà không bị lỗi tràn pixel (A RenderFlex overflowed).
+
+Câu 72: Lỗi "A RenderFlex overflowed by xxx pixels" trong Flutter xảy ra khi nào?
+A. Khi ứng dụng bị mất kết nối cơ sở dữ liệu
+*B. Khi kích thước nội dung của các widget con vượt quá không gian hiển thị của widget cha (thường là Column hoặc Row không cho phép cuộn)
+C. Khi biến bị null
+D. Khi file ảnh quá nặng
+Giải thích: Đây là lỗi phổ biến nhất trong Flutter khi bố cục nội dung vượt quá kích thước màn hình mà không được đặt trong widget có khả năng cuộn (như SingleChildScrollView).
+
+Câu 73: Trong ConvexBottomBar, mỗi mục điều hướng được định nghĩa thông qua class nào?
+A. BottomNavigationBarItem
+*B. TabItem
+C. NavigationDestination
+D. BarItem
+Giải thích: convex_bottom_bar sử dụng TabItem(icon: Icons...., title: '...') để định nghĩa từng nút bấm trên thanh bar.
+
+Câu 74: Trong GreenKitchen, khi người dùng thực hiện thao tác Đăng xuất (Logout), những thông tin nào cần được xóa hoặc cập nhật?
+*A. Xóa phiên đăng nhập (SharedPreferences hoặc FirebaseAuth.instance.signOut()) và điều hướng về LoginScreen
+B. Xóa toàn bộ database trên server
+C. Tắt kết nối Wi-Fi của máy
+D. Gỡ cài đặt ứng dụng
+Giải thích: Đăng xuất cần xóa token/thông tin user lưu tạm thời và dùng Navigator.pushReplacement đưa người dùng về màn hình đăng nhập.
+
+Câu 75: Phương thức Navigator.pushReplacement() khác với Navigator.push() ở điểm nào?
+*A. pushReplacement sẽ thay thế màn hình hiện tại bằng màn hình mới (người dùng không thể bấm nút Back để quay lại màn hình cũ)
+B. pushReplacement sẽ mở màn hình mới trong một cửa sổ trình duyệt bên ngoài
+C. pushReplacement làm chậm quá trình chuyển trang
+D. pushReplacement chỉ dùng được trên hệ điều hành Android
+Giải thích: pushReplacement hủy bỏ màn hình hiện tại khỏi ngăn xếp điều hướng (Navigation Stack) và thay thế bằng màn hình mới, rất phù hợp khi chuyển từ Splash/Login sang Home.
+
+Câu 76: Đoạn code: list.sort((a, b) => bTime.compareTo(aTime)); trong HistoryService sắp xếp danh sách theo thứ tự nào?
+*A. Giảm dần theo thời gian (món mới xem nhất nằm ở vị trí đầu tiên của danh sách)
+B. Tăng dần theo thời gian (món xem lâu nhất nằm ở đầu)
+C. Sắp xếp theo thứ tự bảng chữ cái A-Z
+D. Sắp xếp ngẫu nhiên
+Giải thích: b.compareTo(a) tạo ra thứ tự sắp xếp giảm dần (descending), nghĩa là mốc thời gian lớn hơn (mới hơn) sẽ đứng trước.
+
+Câu 77: Khi parse dữ liệu từ TheMealDB, nếu trường strYoutube bị null hoặc rỗng, giao diện nút "Xem Video" nên xử lý như thế nào?
+A. Vẫn hiển thị nút và khi nhấn sẽ văng app
+*B. Ẩn nút xem video hoặc làm mờ nút (disable) và hiển thị thông báo "Chưa có video hướng dẫn"
+C. Tự động tìm kiếm video trên TikTok
+D. Chuyển sang phát một bài hát ngẫu nhiên
+Giải thích: Xử lý phòng thủ (defensive coding): Kiểm tra if (videoUrl != null && videoUrl.isNotEmpty) mới hiển thị nút bấm để tránh lỗi trải nghiệm người dùng.
+
+Câu 78: Trong Dart, toán tử điều kiện null ?? (Null-coalescing operator) hoạt động như thế nào?
+*A. Trả về biểu thức bên trái nếu nó KHÔNG null; ngược lại trả về biểu thức bên phải
+B. Luôn luôn trả về giá trị null
+C. So sánh hai giá trị có bằng nhau hay không
+D. Ép kiểu dữ liệu sang boolean
+Giải thích: Ví dụ: a ?? b, nếu a khác null thì lấy a, nếu a bị null thì lấy giá trị dự phòng b.
+
+Câu 79: Toán tử ?. (Null-aware operator) trong biểu thức item['image_path']?.toString() có tác dụng gì?
+*A. Chỉ gọi phương thức .toString() nếu item['image_path'] khác null, nếu null sẽ trả về null mà không gây crash lỗi NoSuchMethodError
+B. Kiểm tra xem chuỗi có chứa dấu chấm hỏi không
+C. Tự động chuyển đổi thành số nguyên
+D. Nhân đôi giá trị của biến
+Giải thích: Null-aware operator ngăn chặn việc gọi method hoặc truy xuất thuộc tính trên một đối tượng null.
+
+Câu 80: Để tạo hiệu ứng bo tròn toàn diện cho ô nhập văn bản (TextField) trong màn hình Đăng ký/Đăng nhập, thuộc tính nào của InputDecoration được sử dụng?
+A. border: InputBorder.none
+*B. border: OutlineInputBorder(borderRadius: BorderRadius.circular(...))
+C. border: UnderlineInputBorder()
+D. border: Border.all()
+Giải thích: OutlineInputBorder kết hợp BorderRadius.circular tạo viền bo tròn xung quanh ô nhập liệu.
+
+Câu 81: Trong Firestore, làm thế nào để tạo một ID tự động ngẫu nhiên cho một document mới trong collection?
+*A. Gọi collection('recipes').add(data) hoặc collection('recipes').doc() (không truyền tham số)
+B. Dùng hàm Random().nextInt()
+C. Bắt buộc phải nhập ID thủ công bằng tay
+D. Dùng lệnh autoincrement()
+Giải thích: Hàm .add() tự sinh document ID duy nhất; hoặc gọi .doc() không đối số sẽ tạo một DocumentReference có ID ngẫu nhiên.
+
+Câu 82: Trong màn hình AddRecipeFormScreen, người dùng cần nhập những thông tin bắt buộc nào để tạo một công thức?
+*A. Tên món ăn, danh sách nguyên liệu, các bước thực hiện và link ảnh món ăn
+B. Số chứng minh nhân dân và ngày sinh
+C. Tọa độ GPS của nhà bếp
+D. Giá bán món ăn tại nhà hàng
+Giải thích: Một công thức nấu ăn cơ bản cần tiêu đề món, nguyên liệu, hướng dẫn cách làm và hình ảnh minh họa.
+
+Câu 83: Mục dev_dependencies trong pubspec.yaml của GreenKitchen chứa các gói dùng cho mục đích gì?
+A. Các gói chỉ chạy trên máy chủ đám mây
+*B. Các gói chỉ phục vụ trong quá trình phát triển, kiểm thử và phân tích mã (như flutter_test, flutter_lints), không được đóng gói vào sản phẩm cuối cùng
+C. Các gói dành riêng cho thiết bị iOS
+D. Các gói trả phí của Flutter
+Giải thích: dev_dependencies chỉ được sử dụng khi lập trình viên code và test trên máy tính, không làm tăng dung lượng file cài đặt ứng dụng release.
+
+Câu 84: Lệnh flutter clean trong terminal của Flutter có tác dụng gì?
+*A. Xóa thư mục build và các file tạm sinh ra trong các lần biên dịch trước để khắc phục lỗi xung đột cache
+B. Xóa toàn bộ mã nguồn của dự án
+C. Gỡ cài đặt Flutter khỏi máy tính
+D. Định dạng lại toàn bộ code theo chuẩn
+Giải thích: flutter clean dọn dẹp các tệp build tạm thời, giúp giải quyết các lỗi biên dịch kỳ lạ liên quan đến cache Gradle hoặc Xcode.
+
+Câu 85: Khi một TextEditingController được khởi tạo trong State của một StatefulWidget, lệnh nào BẮT BUỘC phải được gọi trong hàm dispose() để tránh rò rỉ bộ nhớ (memory leak)?
+A. controller.clear()
+*B. controller.dispose()
+C. controller.stop()
+D. controller.detach()
+Giải thích: Tất cả các controller, animation, stream subscription trong Flutter đều phải gọi .dispose() hoặc .cancel() khi widget bị hủy để giải phóng bộ nhớ RAM.
+
+Câu 86: Trong GreenKitchen, tại sao việc tổ chức mã nguồn thành các thư mục riêng biệt như models/, screens/, services/, widgets/ lại quan trọng?
+*A. Tuân thủ nguyên lý tách biệt mối quan tâm (Separation of Concerns), giúp dự án dễ bảo trì, mở rộng và kiểm thử
+B. Giúp ứng dụng chạy nhanh hơn gấp 10 lần
+C. Là quy định bắt buộc của Flutter, nếu không app sẽ không chạy
+D. Để giảm dung lượng file APK
+Giải thích: Cấu trúc thư mục phân lớp rõ ràng (Layered Architecture) giúp quản lý code chuyên nghiệp, người bảo trì dễ tìm kiếm và chỉnh sửa.
+
+Câu 87: Thư mục lib/widgets/ chứa những file có mục đích gì trong dự án?
+A. Chứa các file kết nối trực tiếp đến database MySQL
+*B. Chứa các thành phần giao diện nhỏ, tái sử dụng được ở nhiều màn hình (như ThemeApp, meal_card, homeBody)
+C. Chứa các tệp âm thanh của app
+D. Chứa các script deploy lên server
+Giải thích: Thư mục widgets chứa các custom widget có thể tái sử dụng (reusable components) trên nhiều màn hình khác nhau.
+
+Câu 88: Trong Flutter, từ khóa const trước các Widget (ví dụ: const SizedBox(height: 10)) mang lại lợi ích gì?
+*A. Giúp Flutter tối ưu bộ nhớ và không phải khởi tạo lại widget đó khi giao diện vẽ lại (re-render)
+B. Biến widget đó thành một hằng số có thể chỉnh sửa giá trị
+C. Làm cho widget đó luôn hiển thị trên cùng
+D. Tự động dịch widget sang ngôn ngữ khác
+Giải thích: const widgets được lưu vào bộ nhớ canonicalized pool lúc compile, tránh việc cấp phát lại bộ nhớ mỗi lần build() chạy lại.
+
+Câu 89: Thuộc tính obscureText: true trong TextField được sử dụng cho trường nào?
+A. Trường nhập Tên món ăn
+B. Trường nhập Email
+*C. Trường nhập Mật khẩu (Password) để ẩn ký tự dưới dạng dấu chấm
+D. Trường nhập Mô tả công thức
+Giải thích: obscureText: true che giấu các ký tự người dùng gõ vào, bảo vệ tính riêng tư của mật khẩu.
+
+Câu 90: Trong màn hình HomeBody, danh mục món ăn (Categories) thường được hiển thị theo hướng nào để người dùng vuốt chọn dễ dàng?
+A. Vuốt dọc từ dưới lên
+*B. Cuộn ngang (horizontal scroll) bằng ListView.builder với scrollDirection: Axis.horizontal
+C. Xoay tròn 360 độ
+D. Hiển thị dạng bảng tĩnh không cuộn được
+Giải thích: Danh mục món ăn thường dùng thanh cuộn ngang (horizontal carousel) để tiết kiệm diện tích màn hình chính.
+
+Câu 91: Widget Flexible hoặc Expanded được dùng trong Row hoặc Column nhằm mục đích gì?
+*A. Cho phép widget con co giãn linh hoạt chiếm trọn phần không gian còn lại của widget cha
+B. Cố định kích thước không bao giờ thay đổi
+C. Ẩn widget con đi khi màn hình nhỏ
+D. Thay đổi màu sắc của widget
+Giải thích: Expanded/Flexible giúp các widget con chia sẻ không gian linh hoạt, chống tràn màn hình (overflow) khi kích thước thiết bị thay đổi.
+
+Câu 92: Trong file lib/screens/login_screen.dart, khi người dùng nhập sai tên đăng nhập hoặc mật khẩu, hệ thống nên hiển thị phản hồi gì?
+*A. Hiển thị thông báo lỗi rõ ràng qua SnackBar hoặc AlertDialog (ví dụ: "Tài khoản hoặc mật khẩu không chính xác")
+B. Tắt ứng dụng ngay lập tức
+C. Tự động tạo một tài khoản mới
+D. Chuyển thẳng vào màn hình chính mà không cần mật khẩu
+Giải thích: Ứng dụng thân thiện luôn đưa ra phản hồi rõ ràng khi người dùng nhập sai dữ liệu để họ biết và thao tác lại.
+
+Câu 93: Khái niệm "Hot Reload" trong Flutter mang lại ưu thế gì cho lập trình viên phát triển GreenKitchen?
+*A. Cập nhật mã nguồn và hiển thị ngay lập tức lên màn hình máy ảo/máy thật chỉ trong vài giây mà không làm mất trạng thái (state) hiện tại của ứng dụng
+B. Tự động sửa lỗi sai cú pháp trong code
+C. Tự động đẩy code lên GitHub
+D. Tự động biên dịch ra file APK đưa lên Google Play
+Giải thích: Hot Reload là tính năng mạnh mẽ nhất của Flutter giúp dev tiết kiệm hàng giờ chờ đợi biên dịch lại từ đầu.
+
+Câu 94: Trong ApiService, mã phản hồi HTTP nào (response.statusCode) chứng minh yêu cầu lấy dữ liệu từ TheMealDB đã thành công?
+A. 404 (Not Found)
+B. 500 (Internal Server Error)
+*C. 200 (OK)
+D. 401 (Unauthorized)
+Giải thích: Mã trạng thái 200 OK đại diện cho một HTTP request thành công.
+
+Câu 95: Khi chuyển đổi chuỗi JSON nhận được từ API thành Map hoặc List trong Dart, hàm nào của thư viện dart:convert được gọi?
+A. jsonEncode()
+*B. jsonDecode() (hoặc json.decode())
+C. toString()
+D. parseInt()
+Giải thích: jsonDecode() nhận chuỗi JSON dạng String và giải mã thành đối tượng Dart (Map hoặc List).
+
+Câu 96: Trong Flutter, Provider.of<ThemeNotifier>(context, listen: false) khác với listen: true (mặc định) ở điểm nào?
+*A. listen: false chỉ đọc giá trị hoặc gọi hàm của Provider mà KHÔNG lắng nghe sự thay đổi (widget sẽ không bị build lại khi Provider notifyListeners)
+B. listen: false làm ứng dụng bị đứng hình
+C. listen: false chỉ chạy được khi thiết bị có kết nối mạng
+D. listen: false sẽ xóa sạch dữ liệu trong Provider
+Giải thích: Khi gọi hành động (như toggleTheme) trong hàm callback của button, nên dùng listen: false để tránh re-render widget không cần thiết.
+
+Câu 97: Để hiển thị danh sách dạng lưới 2 cột cho các món ăn trong AllMealsScreen, widget nào thường được sử dụng?
+A. Column
+B. ListView
+*C. GridView.builder với gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2)
+D. Table
+Giải thích: GridView.builder kết hợp SliverGridDelegateWithFixedCrossAxisCount cho phép dựng lưới món ăn 2 cột cực kỳ mượt mà và tối ưu bộ nhớ.
+
+Câu 98: Trong Android Studio / VS Code, tệp nào quy định quyền truy cập Internet cho ứng dụng GreenKitchen trên hệ điều hành Android?
+A. build.gradle
+*B. android/app/src/main/AndroidManifest.xml (với thẻ <uses-permission android:name="android.permission.INTERNET"/>)
+C. settings.gradle
+D. gradle.properties
+Giải thích: AndroidManifest.xml quy định các quyền (permissions) mà app được phép sử dụng trên hệ điều hành Android.
+
+Câu 99: Trong iOS, file cấu hình nào quy định các quyền và thông tin ứng dụng tương đương với AndroidManifest.xml?
+A. Podfile
+*B. ios/Runner/Info.plist
+C. AppDelegate.swift
+D. project.pbxproj
+Giải thích: Info.plist chứa danh sách các cấu hình và quyền hạn của app iOS (như quyền mở URL ngoài, quyền truy cập thư viện ảnh...).
+
+Câu 100: Kỹ thuật chia trang (Pagination / Infinite Scrolling) nếu áp dụng cho danh sách món ăn trong GreenKitchen sẽ giải quyết vấn đề gì?
+*A. Tránh tải hàng nghìn món ăn cùng một lúc gây tốn RAM, hao pin và đơ giật ứng dụng; chỉ tải thêm dữ liệu khi người dùng cuộn đến cuối danh sách
+B. Tự động dịch tất cả các ngôn ngữ
+C. Tự động xóa các món ăn không có người xem
+D. Làm cho hình ảnh món ăn sắc nét hơn
+Giải thích: Phân trang (Pagination) là giải pháp tối ưu bắt buộc khi danh sách dữ liệu quá lớn, giúp app mượt mà và tiết kiệm băng thông mạng.
+
+Câu 101: Tại sao trường created_at trong Firestore của GreenKitchen lại được lưu dưới dạng Timestamp thay vì chuỗi String ngày giờ đơn thuần?
+*A. Dễ dàng so sánh, sắp xếp thứ tự trước sau chính xác và chuyển đổi mượt mà sang đối tượng DateTime của Dart
+B. Vì Firestore không cho phép lưu kiểu chuỗi
+C. Để tiết kiệm 100 lần dung lượng lưu trữ
+D. Để mã hóa ngày tháng không cho ai đọc được
+Giải thích: Kiểu Timestamp trong Firestore là kiểu dữ liệu tối ưu cho việc truy vấn khoảng thời gian và sắp xếp theo mốc thời gian thực tế.
+
+Câu 102: Lệnh git status trong terminal của lập trình viên GreenKitchen dùng để làm gì?
+*A. Kiểm tra trạng thái hiện tại của kho chứa (các file đã chỉnh sửa, thêm mới hoặc chưa được theo dõi)
+B. Đẩy code lên server GitHub
+C. Tải mã nguồn mới nhất về máy
+D. Xóa toàn bộ lịch sử commit
+Giải thích: git status hiển thị các file đang ở trạng thái modified, untracked hoặc staged trong working directory.
+
+Câu 103: Mục tiêu chính của ứng dụng GreenKitchen được xây dựng là gì?
+*A. Cung cấp nền tảng chia sẻ và tra cứu công thức nấu ăn lành mạnh, đa dạng văn hóa ẩm thực với tính năng dịch tự động và quản lý bài viết thông minh
+B. Một sàn giao dịch tiền điện tử
+C. Một mạng xã hội video ngắn tương tự TikTok
+D. Một trò chơi điện tử hành động 3D
+Giải thích: GreenKitchen (DoAnApp) là ứng dụng nấu ăn tra cứu và chia sẻ công thức ẩm thực lành mạnh được hỗ trợ bởi TheMealDB và Firestore.
+
+Câu 104: Trong widget MealCard, khi người dùng bấm vào biểu tượng Trái tim (Heart Icon), hành động nào được kích hoạt?
+*A. Kiểm tra trạng thái yêu thích, thêm vào hoặc xóa khỏi danh sách yêu thích qua FavoriteService và cập nhật màu icon (Đỏ hoặc Trắng)
+B. Gửi tin nhắn đến tác giả bài viết
+C. Tải video hướng dẫn về máy
+D. Mở ứng dụng gọi đồ ăn nhanh
+Giải thích: Nút trái tim dùng để toggle trạng thái yêu thích (Favorite) của món ăn, đồng thời cập nhật ngay icon trên giao diện.
+
+Câu 105: Khi ứng dụng GreenKitchen chạy trên nền tảng Web hoặc Desktop (Windows/macOS), yếu tố nào giúp Flutter chạy được mà không cần viết lại toàn bộ code?
+*A. Kiến trúc đa nền tảng (Cross-platform) của Flutter với cùng một codebase Dart duy nhất và engine đồ họa Skia / Impeller
+B. Nhờ hệ điều hành Windows tự dịch code Android
+C. Nhờ Firebase hỗ trợ chạy giả lập
+D. Nhờ trình duyệt Chrome tự chuyển đổi mã
+Giải thích: Flutter là framework đa nền tảng thực sự, cho phép biên dịch từ 1 mã nguồn Dart duy nhất ra Android, iOS, Web, Windows, macOS và Linux.

@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Quiz {
+  id             String     @id @default(uuid())
+  shareCode      String     @unique @map("share_code") @db.VarChar(10)
+  title          String     @db.VarChar(255)
+  description    String?    @db.Text
+  totalQuestions Int        @default(0) @map("total_questions")
+  playCount      Int        @default(0) @map("play_count")
+  createdAt      DateTime   @default(now()) @map("created_at")
+  updatedAt      DateTime   @default(now()) @updatedAt @map("updated_at")
+  questions      Question[]
+
+  @@map("quizzes")
+  @@index([shareCode])
+}
+
+model Question {
+  id           String   @id @default(uuid())
+  quizId       String   @map("quiz_id")
+  questionText String   @map("question_text") @db.Text
+  options      Json     // Lưu mảng 3-6 đáp án: [{ id, text, is_correct }]
+  explanation  String?  @db.Text
+  orderIndex   Int      @default(0) @map("order_index")
+  quiz         Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("questions")
+  @@index([quizId])
+}

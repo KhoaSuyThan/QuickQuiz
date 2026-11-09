@@ -1,0 +1,360 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { UploadCloud, FileText, CheckCircle2, AlertTriangle, ArrowRight, Loader2, Sparkles } from "lucide-react";
+import { parseRawText, parseCSV, parseExcel } from "@/lib/parser";
+import { QuizQuestion } from "@/lib/types";
+import { saveLocalQuiz } from "@/lib/storage";
+
+// Mẫu hiển thị sẵn đúng 1 câu duy nhất chuẩn cấu trúc
+const DEFAULT_SAMPLE_TEXT = `Câu 1: Thủ đô của Việt Nam là gì?
+*A. Hà Nội
+B. Đà Nẵng
+C. TP. Hồ Chí Minh
+D. Cần Thơ
+Giải thích: Hà Nội là thủ đô của nước Cộng hòa Xã hội Chủ nghĩa Việt Nam.`;
+
+export default function Uploader() {
+  const router = useRouter();
+  const [activeTab, setActiveTab] = useState<"text" | "file">("text");
+
+  // Hiển thị sẵn dữ liệu mẫu 1 câu ngay khi vào trang, không cần người dùng phải bấm nút
+  const [rawText, setRawText] = useState(DEFAULT_SAMPLE_TEXT);
+  const [title, setTitle] = useState("Bộ Đề Trắc Nghiệm Mới");
+  const [description, setDescription] = useState("Bộ câu hỏi ôn tập kiến thức.");
+  const [parsedQuestions, setParsedQuestions] = useState<QuizQuestion[]>(() => parseRawText(DEFAULT_SAMPLE_TEXT));
+  const [isParsing, setIsParsing] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // Xử lý phân tích Text trực tiếp khi người dùng chỉnh sửa
+  const handleParseText = (text: string) => {
+    setRawText(text);
+    setErrorMsg("");
+    if (!text.trim()) {
+      setParsedQuestions([]);
+      return;
+    }
+    const questions = parseRawText(text);
+    setParsedQuestions(questions);
+    if (questions.length === 0) {
+      setErrorMsg("Chưa nhận diện được câu hỏi hợp lệ. Đảm bảo mỗi câu có 3-6 lựa chọn và có dấu * ở đầu đáp án đúng.");
+    }
+  };
+
+  // Khôi phục lại mẫu 1 câu nếu cần
+  const handleResetSample = () => {
+    setTitle("Bộ Đề Trắc Nghiệm Mới");
+    setDescription("Bộ câu hỏi ôn tập kiến thức.");
+    handleParseText(DEFAULT_SAMPLE_TEXT);
+  };
+
+  // Xử lý upload file Excel / CSV
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsParsing(true);
+    setErrorMsg("");
+
+    try {
+      const fileName = file.name.toLowerCase();
+      let questions: QuizQuestion[] = [];
+
+      if (!title || title === "Bộ Đề Trắc Nghiệm Mới") {
+        setTitle(file.name.replace(/\.[^/.]+$/, ""));
+      }
+
+      if (fileName.endsWith(".csv")) {
+        const text = await file.text();
+        questions = parseCSV(text);
+      } else if (fileName.endsWith(".xlsx") || fileName.endsWith(".xls")) {
+        const buffer = await file.arrayBuffer();
+        questions = parseExcel(buffer);
+      } else if (fileName.endsWith(".txt")) {
+        const text = await file.text();
+        questions = parseRawText(text);
+      } else {
+        throw new Error("Định dạng file không được hỗ trợ. Vui lòng chọn .xlsx, .csv hoặc .txt");
+      }
+
+      setParsedQuestions(questions);
+      if (questions.length === 0) {
+        setErrorMsg("Không tìm thấy câu hỏi hợp lệ trong file. Vui lòng kiểm tra lại cấu trúc cột.");
+      }
+    } catch (err: any) {
+      setErrorMsg(err?.message || "Lỗi khi đọc file");
+    } finally {
+      setIsParsing(false);
+    }
+  };
+
+  // Lưu đề thi lên PostgreSQL và IndexedDB
+  const handleSubmit = async () => {
+    if (!title.trim()) {
+      setErrorMsg("Vui lòng nhập tiêu đề cho bộ đề thi!");
+      return;
+    }
+    if (parsedQuestions.length === 0) {
+      setErrorMsg("Cần ít nhất 1 câu hỏi hợp lệ có đánh dấu * ở đáp án đúng!");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrorMsg("");
+
+    try {
+      // 1. Gửi lên API lưu vào PostgreSQL (nếu có kết nối DB)
+      const res = await fetch("/api/quizzes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          description: description.trim(),
+          questions: parsedQuestions,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Lỗi khi lưu đề thi");
+      }
+
+      const finalShareCode = data.shareCode || "LOCAL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+      const finalId = data.quizId || "local-" + Date.now();
+
+      // 2. Lưu bộ đề vào IndexedDB trên máy người dùng để quản lý cục bộ
+      await saveLocalQuiz({
+        id: finalId,
+        shareCode: finalShareCode,
+        title: title.trim(),
+        description: description.trim(),
+        totalQuestions: parsedQuestions.length,
+        createdAt: new Date().toISOString(),
+        questions: parsedQuestions,
+      });
+
+      // 3. Chuyển hướng ngay đến màn hình làm bài
+      router.push(`/quiz/${finalShareCode}`);
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err?.message || "Có lỗi xảy ra khi tạo đề thi");
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="space-y-8 animate-pop">
+      {/* Tiêu đề trang */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Tạo Bộ Đề Trắc Nghiệm Mới
+        </h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          Nhập dữ liệu trắc nghiệm linh hoạt (dán văn bản, file Excel hoặc CSV) với 3 đến 6 đáp án mỗi câu.
+        </p>
+      </div>
+
+      {/* Thông tin bộ đề */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+            Tiêu đề bộ đề <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            placeholder="Ví dụ: Ôn tập Trắc nghiệm Lịch sử - Chương 1..."
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className="w-full text-sm font-medium bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+            Mô tả / Hướng dẫn (Tùy chọn)
+          </label>
+          <input
+            type="text"
+            placeholder="Ví dụ: Đề gồm các câu hỏi từ mức độ nhận biết đến vận dụng cao..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="w-full text-sm bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+          />
+        </div>
+      </div>
+
+      {/* Chọn Tab nhập dữ liệu */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3 flex-wrap gap-2">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setActiveTab("text")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "text"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              <span>Dán Văn Bản Thô (Text)</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("file")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                activeTab === "file"
+                  ? "bg-blue-600 text-white shadow-sm"
+                  : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
+            >
+              <UploadCloud className="w-4 h-4" />
+              <span>Tải Lên File (Excel / CSV)</span>
+            </button>
+          </div>
+
+          {activeTab === "text" && (
+            <button
+              type="button"
+              onClick={handleResetSample}
+              className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Khôi phục mẫu 1 câu</span>
+            </button>
+          )}
+        </div>
+
+        {/* Nội dung Tab Text */}
+        {activeTab === "text" && (
+          <div className="space-y-2">
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              💡 Quy tắc: Đặt dấu <span className="font-bold text-blue-600">*</span> ở đầu đáp án đúng (VD: <code>*A. Hà Nội</code>). Mỗi câu có 3-6 đáp án và các câu cách nhau bởi một dòng trống.
+            </p>
+            <textarea
+              rows={8}
+              placeholder="Dán câu hỏi của bạn vào đây..."
+              value={rawText}
+              onChange={(e) => handleParseText(e.target.value)}
+              className="w-full text-xs font-mono bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl p-3.5 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+            />
+          </div>
+        )}
+
+        {/* Nội dung Tab File */}
+        {activeTab === "file" && (
+          <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-8 text-center hover:border-blue-500 dark:hover:border-blue-500 transition-colors bg-slate-50/50 dark:bg-slate-950/50">
+            <input
+              type="file"
+              id="quiz-file-input"
+              accept=".xlsx, .xls, .csv, .txt"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+            <label
+              htmlFor="quiz-file-input"
+              className="cursor-pointer flex flex-col items-center justify-center gap-2"
+            >
+              <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-inner">
+                {isParsing ? <Loader2 className="w-6 h-6 animate-spin" /> : <UploadCloud className="w-6 h-6" />}
+              </div>
+              <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                Nhấp để chọn file hoặc kéo thả file vào đây
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Hỗ trợ định dạng: <b>.xlsx</b>, <b>.csv</b>, hoặc <b>.txt</b>
+              </p>
+              <div className="mt-2 text-[11px] text-slate-500 bg-slate-200/60 dark:bg-slate-800 px-3 py-1.5 rounded-lg text-left">
+                💡 Cấu trúc cột Excel/CSV: Cột 1: <code>Câu hỏi</code>, Cột 2: <code>Đáp án đúng</code>, Cột 3-7: <code>Các lựa chọn sai</code>
+              </div>
+            </label>
+          </div>
+        )}
+
+        {/* Thông báo lỗi nếu có */}
+        {errorMsg && (
+          <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 text-xs rounded-xl">
+            <AlertTriangle className="w-4 h-4 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Xem trước câu hỏi đã phân tích */}
+      {parsedQuestions.length > 0 && (
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                Đã nhận diện thành công: {parsedQuestions.length} câu hỏi
+              </h2>
+            </div>
+            <span className="text-xs font-semibold px-2.5 py-1 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 rounded-full">
+              Hợp lệ
+            </span>
+          </div>
+
+          <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+            {parsedQuestions.map((q, idx) => (
+              <div
+                key={idx}
+                className="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 space-y-2 text-xs"
+              >
+                <p className="font-semibold text-slate-900 dark:text-slate-100">
+                  Câu {idx + 1}: {q.questionText}
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {q.options.map((opt, oIdx) => (
+                    <div
+                      key={oIdx}
+                      className={`p-2 rounded-lg border flex items-center justify-between ${
+                        opt.is_correct
+                          ? "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-medium"
+                          : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                      }`}
+                    >
+                      <span>
+                        {String.fromCharCode(65 + oIdx)}. {opt.text}
+                      </span>
+                      {opt.is_correct && (
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                          Đúng
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                {q.explanation && (
+                  <p className="text-[11px] text-slate-500 italic">
+                    💡 Giải thích: {q.explanation}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Nút gửi tạo đề */}
+          <div className="pt-2 flex justify-end">
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+              className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold px-6 py-3 rounded-xl shadow-md shadow-blue-500/25 transition-all hover:scale-[1.02] disabled:opacity-50"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Đang xử lý & lưu đề...</span>
+                </>
+              ) : (
+                <>
+                  <span>Lưu Đề & Vào Làm Bài Ngay</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
