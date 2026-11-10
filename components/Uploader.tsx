@@ -189,6 +189,10 @@ export default function Uploader() {
       setErrorMsg("Cần ít nhất 1 câu hỏi hợp lệ có đánh dấu * ở đáp án đúng!");
       return;
     }
+    if (parsedQuestions.length > 200) {
+      setErrorMsg(`Bộ đề hiện có ${parsedQuestions.length} câu hỏi. Hệ thống chỉ hỗ trợ tối đa 200 câu hỏi/đề để đảm bảo trải nghiệm thi mượt mà nhất.`);
+      return;
+    }
 
     setIsSubmitting(true);
     setErrorMsg("");

@@ -1,11 +1,29 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { QuizQuestion, QuizData } from "@/lib/types";
 import { prepareQuizQuestions } from "@/lib/shuffle";
-import { Check, X, ArrowRight, Play, RotateCcw, HelpCircle, CheckCircle, XCircle, Edit3, Trash2, Loader2 } from "lucide-react";
+import { soundFx } from "@/lib/sound";
+import { 
+  Check, 
+  X, 
+  ArrowRight, 
+  Play, 
+  RotateCcw, 
+  HelpCircle, 
+  CheckCircle, 
+  XCircle, 
+  Edit3, 
+  Trash2, 
+  Loader2,
+  Volume2,
+  VolumeX,
+  Timer,
+  Clock,
+  ChevronDown
+} from "lucide-react";
 import QuizResult from "./QuizResult";
 
 interface QuizRunnerProps {
@@ -16,6 +34,13 @@ interface QuizRunnerProps {
 export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunnerProps) {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMuted, setIsMuted] = useState(soundFx.isMuted());
+
+  // Bật/tắt âm thanh
+  const handleToggleMute = () => {
+    const muted = soundFx.toggleMute();
+    setIsMuted(muted);
+  };
 
   // Xử lý xóa đề thi (Tác giả hoặc Admin)
   const handleDeleteQuiz = async () => {
@@ -51,6 +76,50 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
 
   // Cấu hình số lượng câu hỏi cần làm
   const [questionCountInput, setQuestionCountInput] = useState<number>(basePool.length);
+
+  // Cấu hình thời gian làm bài (Phút): 0 = Tự do (không đếm ngược)
+  const [timeLimitMinutes, setTimeLimitMinutes] = useState<number>(0);
+  const [customMinutesInput, setCustomMinutesInput] = useState<string>("");
+  const [selectedDropdownTime, setSelectedDropdownTime] = useState<string>("");
+
+  // Xử lý khi người dùng nhập số vào ô "nhập số" (chỉ nhận số nguyên > 0)
+  const handleTimeNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value.replace(/\D/g, ""); // Chỉ cho phép nhập số
+    if (!rawVal) {
+      setCustomMinutesInput("");
+      setTimeLimitMinutes(0);
+      setSelectedDropdownTime("");
+      return;
+    }
+
+    const num = parseInt(rawVal, 10);
+    if (num > 0) {
+      const finalNum = Math.min(num, 300); // Giới hạn tối đa 300 phút
+      setCustomMinutesInput(String(finalNum));
+      setTimeLimitMinutes(finalNum);
+      const presets = ["5", "10", "15", "30", "45", "60", "90", "120"];
+      setSelectedDropdownTime(presets.includes(String(finalNum)) ? String(finalNum) : "");
+    }
+  };
+
+  // Xử lý khi người dùng chọn từ menu mũi tên xổ xuống
+  const handleDropdownTimeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    setSelectedDropdownTime(val);
+
+    if (!val) {
+      setTimeLimitMinutes(0);
+      setCustomMinutesInput("");
+    } else {
+      const num = parseInt(val, 10);
+      setTimeLimitMinutes(num);
+      setCustomMinutesInput(String(num));
+    }
+  };
+
+  // Trạng thái đếm ngược (giây)
+  const [timeLeftSeconds, setTimeLeftSeconds] = useState<number>(0);
+
   const [isQuizStarted, setIsQuizStarted] = useState<boolean>(false);
 
   // Danh sách câu hỏi đang làm của phiên này (đã được xáo trộn câu & đáp án)
@@ -67,7 +136,26 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
   const [wrongQuestionsList, setWrongQuestionsList] = useState<QuizQuestion[]>([]);
   const [isCompleted, setIsCompleted] = useState<boolean>(false);
 
-  // Bắt đầu làm bài với số lượng câu đã chọn
+  // Bộ đếm thời gian lùi (Countdown Timer) khi làm bài
+  useEffect(() => {
+    if (!isQuizStarted || isCompleted || timeLimitMinutes === 0) return;
+
+    const timer = setInterval(() => {
+      setTimeLeftSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setIsCompleted(true);
+          soundFx.playVictory();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [isQuizStarted, isCompleted, timeLimitMinutes]);
+
+  // Bắt đầu làm bài với số lượng câu và thời gian đã chọn
   const handleStartQuiz = (count?: number) => {
     const finalCount = count || questionCountInput;
     const prepared = prepareQuizQuestions(basePool, finalCount);
@@ -79,10 +167,18 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
     setWrongCount(0);
     setWrongQuestionsList([]);
     setIsCompleted(false);
+
+    // Thiết lập thời gian làm bài
+    if (timeLimitMinutes > 0) {
+      setTimeLeftSeconds(timeLimitMinutes * 60);
+    } else {
+      setTimeLeftSeconds(0);
+    }
+
     setIsQuizStarted(true);
   };
 
-  // Người dùng chọn 1 đáp án -> Kích hoạt Instant Feedback ngay
+  // Người dùng chọn 1 đáp án -> Kích hoạt Instant Feedback & Âm thanh
   const handleSelectOption = (optionId: string) => {
     if (isAnswerChecked) return; // Đã kiểm tra thì không cho chọn lại câu này
 
@@ -94,8 +190,10 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
     const isCorrect = chosen?.is_correct ?? false;
 
     if (isCorrect) {
+      soundFx.playCorrect();
       setCorrectCount((prev) => prev + 1);
     } else {
+      soundFx.playWrong();
       setWrongCount((prev) => prev + 1);
       setWrongQuestionsList((prev) => [...prev, currentQ]);
     }
@@ -108,6 +206,7 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
       setSelectedOptionId(null);
       setIsAnswerChecked(false);
     } else {
+      soundFx.playVictory();
       setIsCompleted(true);
     }
   };
@@ -132,6 +231,13 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
     setIsQuizStarted(true);
   };
 
+  // Định dạng thời gian MM:SS cho bộ đếm ngược
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${m < 10 ? "0" : ""}${m}:${s < 10 ? "0" : ""}${s}`;
+  };
+
   // 1. Màn hình hoàn thành bài thi -> Hiển thị kết quả tổng kết
   if (isCompleted) {
     return (
@@ -149,12 +255,24 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
     );
   }
 
-  // 2. Màn hình cấu hình số lượng câu hỏi trước khi làm bài
+  // 2. Màn hình cấu hình số lượng câu hỏi và thời gian trước khi làm bài
   if (!isQuizStarted) {
     const isWrongOnlyMode = !!(initialWrongQuestions && initialWrongQuestions.length > 0);
 
     return (
       <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-md space-y-6 animate-pop">
+        {/* Nút bật tắt âm thanh ở góc trên */}
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleToggleMute}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            {isMuted ? <VolumeX className="w-4 h-4 text-rose-500" /> : <Volume2 className="w-4 h-4 text-emerald-500" />}
+            <span>{isMuted ? "Âm thanh: TẮT" : "Âm thanh: BẬT"}</span>
+          </button>
+        </div>
+
         <div className="text-center space-y-2">
           <div className="inline-flex p-3 rounded-2xl bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400">
             <Play className="w-8 h-8 fill-current" />
@@ -206,35 +324,78 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
             <span>Chế độ ôn tập đặc biệt: Bạn đang làm lại {basePool.length} câu đã trả lời sai ở lần thi trước.</span>
           </div>
         ) : (
-          <div className="space-y-3 bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
-            <div className="flex items-center justify-between text-xs font-medium text-slate-600 dark:text-slate-300">
+          <div className="bg-slate-50 dark:bg-slate-800/40 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-3.5">
+            <div className="flex items-center justify-between text-xs font-medium text-slate-600 dark:text-slate-300 border-b border-slate-200/80 dark:border-slate-700/80 pb-2">
               <span>Tổng số câu hỏi trong ngân hàng:</span>
               <span className="font-bold text-slate-900 dark:text-white text-sm">{basePool.length} câu</span>
             </div>
 
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 mb-1.5">
-                Nhập số lượng câu hỏi bạn muốn làm:
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={1}
-                  max={basePool.length}
-                  value={questionCountInput}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value) || 1;
-                    setQuestionCountInput(Math.min(Math.max(val, 1), basePool.length));
-                  }}
-                  className="w-24 text-center font-bold text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl py-2 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  type="button"
-                  onClick={() => setQuestionCountInput(basePool.length)}
-                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline px-2 py-1"
-                >
-                  Làm tất cả ({basePool.length} câu)
-                </button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* 1. Nhập số lượng câu hỏi */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 mb-1.5">
+                  Nhập số lượng câu hỏi:
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={1}
+                    max={basePool.length}
+                    value={questionCountInput}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 1;
+                      setQuestionCountInput(Math.min(Math.max(val, 1), basePool.length));
+                    }}
+                    className="w-24 text-center font-bold text-sm bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl py-2 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setQuestionCountInput(basePool.length)}
+                    className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline px-1 py-1"
+                  >
+                    Làm tất cả ({basePool.length})
+                  </button>
+                </div>
+              </div>
+
+              {/* 2. Thời gian làm bài (nằm bên cạnh, đơn vị Phút ở bên phải) */}
+              <div>
+                <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 mb-1.5">
+                  <Timer className="w-3.5 h-3.5 text-blue-600" /> Thời gian làm bài:
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-stretch shadow-sm rounded-xl overflow-hidden border border-slate-300 dark:border-slate-700 focus-within:ring-2 focus-within:ring-blue-500 transition-all bg-white dark:bg-slate-900">
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="nhập số"
+                      value={customMinutesInput}
+                      onChange={handleTimeNumberChange}
+                      className="w-24 px-2.5 py-2 text-center text-sm font-bold bg-transparent text-slate-900 dark:text-white placeholder:text-slate-400 placeholder:font-normal focus:outline-none"
+                    />
+                    <div className="relative border-l border-slate-200 dark:border-slate-700 bg-slate-100/90 dark:bg-slate-800/90 flex items-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                      <select
+                        value={selectedDropdownTime}
+                        onChange={handleDropdownTimeChange}
+                        className="appearance-none h-full pl-2 pr-6 text-xs font-semibold bg-transparent text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer"
+                      >
+                        <option value="" className="hidden"></option>
+                        <option value="5" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">5</option>
+                        <option value="10" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">10</option>
+                        <option value="15" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">15</option>
+                        <option value="30" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">30</option>
+                        <option value="45" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">45</option>
+                        <option value="60" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">60</option>
+                        <option value="90" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">90</option>
+                        <option value="120" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">120</option>
+                      </select>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 absolute right-1.5 pointer-events-none" />
+                    </div>
+                  </div>
+                  <span className="text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 shrink-0">
+                    Phút
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -257,19 +418,46 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
 
   return (
     <div className="max-w-2xl mx-auto space-y-5 animate-pop">
-      {/* Thanh tiến độ & Thống kê realtime */}
+      {/* Thanh tiến độ, Đồng hồ đếm ngược & Thống kê realtime */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3">
         <div className="flex items-center justify-between text-xs font-semibold">
           <span className="text-slate-500 dark:text-slate-400">
             Câu {currentIndex + 1} / {activeQuestions.length}
           </span>
-          <div className="flex items-center gap-3">
+
+          {/* Đồng hồ đếm ngược (nếu có hẹn giờ) */}
+          {timeLimitMinutes > 0 ? (
+            <div className={`flex items-center gap-1.5 px-3 py-1 rounded-xl font-mono text-xs font-bold border transition-all ${
+              timeLeftSeconds <= 60
+                ? "bg-rose-50 dark:bg-rose-950/60 text-rose-600 border-rose-300 animate-pulse"
+                : "bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800"
+            }`}>
+              <Timer className="w-3.5 h-3.5 shrink-0" />
+              <span>{formatTime(timeLeftSeconds)}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1 text-slate-400 text-[11px]">
+              <Clock className="w-3 h-3" />
+              <span>Tự do</span>
+            </div>
+          )}
+
+          {/* Thống kê câu đúng/sai & Nút bật tắt âm thanh */}
+          <div className="flex items-center gap-2">
             <span className="flex items-center gap-1 text-emerald-600 font-bold">
-              <CheckCircle className="w-3.5 h-3.5" /> {correctCount} đúng
+              <CheckCircle className="w-3.5 h-3.5" /> {correctCount}
             </span>
             <span className="flex items-center gap-1 text-rose-500 font-bold">
-              <XCircle className="w-3.5 h-3.5" /> {wrongCount} sai
+              <XCircle className="w-3.5 h-3.5" /> {wrongCount}
             </span>
+            <button
+              type="button"
+              onClick={handleToggleMute}
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ml-1"
+              title={isMuted ? "Bật âm thanh" : "Tắt âm thanh"}
+            >
+              {isMuted ? <VolumeX className="w-4 h-4 text-rose-500" /> : <Volume2 className="w-4 h-4 text-emerald-500" />}
+            </button>
           </div>
         </div>
 

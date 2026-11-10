@@ -5,6 +5,40 @@ Tất cả các thay đổi đáng chú ý của dự án FastQuiz sẽ được
 
 Phiên bản mới nhất sẽ luôn được cập nhật tự động lên đầu file.
 ---
+## [1.3.2] - 2026-11-10
+
+### Tối Ưu Bố Cục Chuẩn Bị Làm Bài: Đặt Cạnh Nhau & Tinh Gọn Thời Gian
+- **Bố Cục Hai Cột Cạnh Nhau:**
+  - Gộp trường nhập số lượng câu hỏi và trường thời gian làm bài vào chung một khối card chia 2 cột đối xứng (`grid-cols-2`).
+- **Tinh Gọn Bộ Chọn Thời Gian:**
+  - Loại bỏ hoàn toàn nhãn chữ "Không giới hạn", chỉ hiển thị số nguyên trong ô nhập và menu xổ xuống (5, 10, 15, 30, 45, 60, 90, 120).
+  - Đưa nhãn đơn vị **"Phút"** cố định sang bên phải của cụm điều khiển để giao diện trực quan, khoa học và gọn gàng.
+
+## [1.3.1] - 2026-11-10
+
+### Cải Tiến Giao Diện Hộp Chọn Thời Gian Làm Bài (Input Group + Dropdown)
+- **Hộp Điều Khiển Thời Gian Hai Thành Phần Tích Hợp:**
+  - Thay thế toàn bộ lưới 8 nút chọn thời gian bấm riêng lẻ bằng cụm điều khiển thông minh duy nhất tại màn hình chuẩn bị làm bài.
+  - **Ô nhập số bên trái:** Nhận giá trị số nguyên (`> 0`), placeholder mờ `"nhập số"`, tự động lọc bỏ ký tự không phải số và giới hạn tối đa 300 phút.
+  - **Mũi tên xổ xuống bên phải (`ChevronDown`):** Cho phép chọn nhanh các mốc thời gian phổ biến (*Không giới hạn, 5 phút, 10 phút, 15 phút, 30 phút, 45 phút, 60 phút, Tùy chỉnh...*).
+  - Đồng bộ trạng thái hai chiều giữa việc nhập số thủ công và chọn từ danh sách thả xuống.
+
+## [1.3.0] - 2026-11-10
+
+### Hoàn Thiện Countdown Timer, Web Audio Sound FX, OpenGraph Preview & Chống Spam
+- **Chủ Động Chọn Thời Gian Làm Bài & Countdown Timer:**
+  - Cho phép người dùng tùy chọn thời gian làm bài tại màn hình chờ: Không giới hạn, 5 phút, 10 phút, 15 phút, 30 phút, 45 phút, 60 phút hoặc tự nhập số phút mong muốn.
+  - Đồng hồ đếm ngược `MM:SS` hiển thị realtime trên thanh tiến độ, chuyển màu đỏ nhấp nháy khi còn dưới 60 giây và tự động nộp bài khi hết giờ.
+- **Hiệu Ứng Âm Thanh Tương Tác Nguyên Bản (Web Audio API):**
+  - Phát âm thanh phản hồi tức thì khi chọn đáp án đúng, sai và âm kèn ăn mừng khi hoàn thành bài mà không phụ thuộc vào file MP3 ngoài.
+  - Nút bật/tắt âm thanh (Mute/Unmute) tiện lợi, tự động lưu lựa chọn vào `localStorage`.
+- **Dynamic OpenGraph Preview Khi Chia Sẻ Link:**
+  - Tạo ảnh xem trước card đồ họa 1200x630px (`/quiz/[code]/opengraph-image`) tự động hiển thị tiêu đề, số lượng câu hỏi và mã đề khi chia sẻ link lên Zalo, Facebook, Messenger.
+- **Bảo Mật, Chống Spam & Kiểm Soát Tải Trọng:**
+  - Giới hạn tối đa 200 câu hỏi/đề thi ở cả giao diện Uploader và API máy chủ để bảo vệ tài nguyên hệ thống.
+  - Áp dụng cơ chế Rate Limiting: tối đa 5 bộ đề trong 10 phút để ngăn chặn spam.
+  - Làm sạch dữ liệu đầu vào chống tấn công XSS trong nội dung câu hỏi và đáp án.
+
 ## [1.2.2] - 2026-11-10
 
 ### Tích Hợp Xác Thực OTP Qua Gmail Thật & Nút Bật/Tắt Hiển Thị Mật Khẩu
