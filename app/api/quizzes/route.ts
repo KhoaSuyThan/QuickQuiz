@@ -1,7 +1,7 @@
-// API tạo mới bộ đề trắc nghiệm và lưu vào PostgreSQL
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { QuizQuestion } from "@/lib/types";
+import { getAuthUser } from "@/lib/auth";
 
 // Hàm sinh mã chia sẻ ngẫu nhiên 6 ký tự (VD: QZ9F2K)
 function generateShareCode(): string {
@@ -25,6 +25,14 @@ function generateEditPasscode(): string {
 
 export async function POST(req: Request) {
   try {
+    const authUser = await getAuthUser();
+    if (!authUser) {
+      return NextResponse.json(
+        { error: "Vui lòng đăng nhập để tạo và xuất bản bộ đề thi." },
+        { status: 401 }
+      );
+    }
+
     const body = await req.json();
     const { title, description, questions, editPasscode: customPasscode } = body as {
       title: string;
@@ -52,6 +60,7 @@ export async function POST(req: Request) {
           description: description?.trim(),
           shareCode,
           editPasscode,
+          userId: authUser?.id || null, // Gắn tài khoản người tạo nếu đã đăng nhập
           totalQuestions: questions.length,
           questions: {
             create: questions.map((q, idx) => ({
@@ -61,14 +70,14 @@ export async function POST(req: Request) {
               options: q.options as any,
             })),
           },
-        },
+        } as any,
       });
 
       return NextResponse.json({
         success: true,
         shareCode: createdQuiz.shareCode,
         quizId: createdQuiz.id,
-        editPasscode: createdQuiz.editPasscode,
+        editPasscode: (createdQuiz as any).editPasscode || editPasscode,
         savedToDatabase: true,
         message: "Bộ đề đã được lưu thành công vào PostgreSQL",
       });

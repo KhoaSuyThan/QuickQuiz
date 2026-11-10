@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Zap, PlusCircle, ArrowRight, BookOpen, Clock, Sparkles, Edit3 } from "lucide-react";
-import { getAllLocalQuizzes } from "@/lib/storage";
+import { Zap, PlusCircle, ArrowRight, BookOpen, Clock, Sparkles, Edit3, Trash2 } from "lucide-react";
+import { getAllLocalQuizzes, deleteLocalQuiz } from "@/lib/storage";
 import { LocalSavedQuiz } from "@/lib/types";
 
 export default function HomePage() {
@@ -12,6 +12,24 @@ export default function HomePage() {
   const [shareCodeInput, setShareCodeInput] = useState("");
   const [localQuizzes, setLocalQuizzes] = useState<LocalSavedQuiz[]>([]);
   const [isLoadingQuizzes, setIsLoadingQuizzes] = useState(true);
+
+  // Xóa đề thi cục bộ trên máy và đồng bộ lên server nếu có quyền
+  const handleDeleteLocal = async (quiz: LocalSavedQuiz) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa bộ đề "${quiz.title}" khỏi máy này không?`)) {
+      return;
+    }
+
+    try {
+      if (quiz.shareCode) {
+        // Cố gắng gọi server xóa nếu user đang đăng nhập và có quyền
+        await fetch(`/api/quizzes/${quiz.shareCode}`, { method: "DELETE" }).catch(() => {});
+      }
+      await deleteLocalQuiz(quiz.id);
+      setLocalQuizzes((prev) => prev.filter((q) => q.id !== quiz.id));
+    } catch (err) {
+      console.error("Lỗi khi xóa đề:", err);
+    }
+  };
 
   useEffect(() => {
     getAllLocalQuizzes()
@@ -163,7 +181,15 @@ export default function HomePage() {
                   <span className="text-slate-500 font-medium">
                     {quiz.totalQuestions} câu hỏi
                   </span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteLocal(quiz)}
+                      className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      title="Xóa bộ đề này"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                     <Link
                       href={`/quiz/${quiz.shareCode || quiz.id}/edit`}
                       className="text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 font-semibold flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
@@ -174,7 +200,7 @@ export default function HomePage() {
                     </Link>
                     <Link
                       href={`/quiz/${quiz.shareCode || quiz.id}`}
-                      className="font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                      className="font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 pl-1"
                     >
                       <span>Làm bài</span>
                       <ArrowRight className="w-3 h-3" />

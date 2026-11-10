@@ -5,7 +5,7 @@ import Link from "next/link";
 import { QuizData } from "@/lib/types";
 import { getAllLocalQuizzes } from "@/lib/storage";
 import QuizRunner from "@/components/QuizRunner";
-import { Loader2, AlertCircle, ArrowLeft, PlusCircle } from "lucide-react";
+import { Loader2, AlertCircle, ArrowLeft, PlusCircle, Lock, ArrowRight } from "lucide-react";
 
 // Bộ đề mẫu tích hợp sẵn cho mã DEMO101
 const DEMO_QUIZ_DATA: QuizData = {
@@ -81,17 +81,40 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
   const [quizData, setQuizData] = useState<QuizData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const [authUser, setAuthUser] = useState<any>(null);
+  const [checkingAuth, setCheckingAuth] = useState<boolean>(true);
 
+  // 1. Kiểm tra trạng thái đăng nhập của người dùng
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (res.ok && data.user) {
+          setAuthUser(data.user);
+        } else {
+          setAuthUser(null);
+        }
+      } catch {
+        setAuthUser(null);
+      } finally {
+        setCheckingAuth(false);
+      }
+    }
+    checkAuth();
+  }, []);
+
+  // 2. Tải thông tin bộ đề thi
   useEffect(() => {
     async function loadQuiz() {
-      // 1. Nếu là mã đề mẫu
+      // Nếu là mã đề mẫu
       if (code === "DEMO101") {
         setQuizData(DEMO_QUIZ_DATA);
         setLoading(false);
         return;
       }
 
-      // 2. Thử tìm kiếm trong cơ sở dữ liệu cục bộ IndexedDB trên máy
+      // Thử tìm kiếm trong cơ sở dữ liệu cục bộ IndexedDB trên máy
       try {
         const localList = await getAllLocalQuizzes();
         const foundLocal = localList.find(
@@ -107,7 +130,7 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
         console.warn("Không thể đọc từ IndexedDB:", e);
       }
 
-      // 3. Nếu không có ở IndexedDB, truy vấn Serverless PostgreSQL qua API
+      // Truy vấn Serverless PostgreSQL qua API
       try {
         const res = await fetch(`/api/quizzes/${code}`);
         const data = await res.json();
@@ -127,11 +150,52 @@ export default function QuizPage({ params }: { params: Promise<{ code: string }>
     loadQuiz();
   }, [code]);
 
-  if (loading) {
+  if (loading || checkingAuth) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-3">
         <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
         <p className="text-sm text-slate-500 font-medium">Đang tải dữ liệu câu hỏi...</p>
+      </div>
+    );
+  }
+
+  // Yêu cầu bắt buộc đăng nhập để làm đề
+  if (!authUser) {
+    return (
+      <div className="max-w-md mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-xl animate-pop">
+        <div className="w-16 h-16 mx-auto rounded-3xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-blue-900 shadow-inner">
+          <Lock className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-black text-slate-900 dark:text-white">
+            Yêu Cầu Đăng Nhập Để Làm Bài
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Bạn cần đăng nhập tài khoản QuickQuiz để bắt đầu làm bài thi trắc nghiệm này và lưu lại kết quả ôn tập.
+          </p>
+        </div>
+        <div className="space-y-2.5 pt-2">
+          <Link
+            href={`/login?callbackUrl=${encodeURIComponent(`/quiz/${code}`)}`}
+            className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.01] flex items-center justify-center gap-2 text-sm"
+          >
+            <span>Đăng Nhập Ngay</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link
+            href={`/register?callbackUrl=${encodeURIComponent(`/quiz/${code}`)}`}
+            className="w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5"
+          >
+            <span>Chưa có tài khoản? Đăng ký tại đây</span>
+          </Link>
+          <Link
+            href="/"
+            className="w-full py-2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 text-xs font-medium flex items-center justify-center gap-1.5"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Quay về trang chủ</span>
+          </Link>
+        </div>
       </div>
     );
   }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
   UploadCloud, 
@@ -14,7 +15,9 @@ import {
   Copy,
   Check,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Lock,
+  ArrowLeft
 } from "lucide-react";
 import { parseRawText, parseCSV, parseExcel } from "@/lib/parser";
 import { QuizQuestion } from "@/lib/types";
@@ -57,6 +60,29 @@ Giải thích: Ngôn ngữ C là ngôn ngữ lập trình thủ tục, không h�
 export default function Uploader() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"text" | "file">("text");
+
+  // Kiểm tra trạng thái đăng nhập
+  const [authUser, setAuthUser] = useState<any>(null);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/auth/me");
+        const data = await res.json();
+        if (res.ok && data.user) {
+          setAuthUser(data.user);
+        } else {
+          setAuthUser(null);
+        }
+      } catch {
+        setAuthUser(null);
+      } finally {
+        setIsLoadingAuth(false);
+      }
+    }
+    checkAuth();
+  }, []);
 
   // Hiển thị sẵn dữ liệu mẫu 1 câu ngay khi vào trang, không cần người dùng phải bấm nút
   const [rawText, setRawText] = useState(DEFAULT_SAMPLE_TEXT);
@@ -208,6 +234,56 @@ export default function Uploader() {
       setIsSubmitting(false);
     }
   };
+
+  if (isLoadingAuth) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 space-y-3">
+        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        <p className="text-sm text-slate-500 font-medium">Đang kiểm tra quyền truy cập...</p>
+      </div>
+    );
+  }
+
+  // Bắt buộc đăng nhập trước khi tạo đề
+  if (!authUser) {
+    return (
+      <div className="max-w-md mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-xl animate-pop">
+        <div className="w-16 h-16 mx-auto rounded-3xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-100 dark:border-blue-900 shadow-inner">
+          <Lock className="w-8 h-8" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-xl font-black text-slate-900 dark:text-white">
+            Yêu Cầu Đăng Nhập Để Tạo Đề Thi
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Bạn cần đăng nhập tài khoản QuickQuiz để tạo, lưu trữ và quản lý các bộ đề trắc nghiệm của riêng mình.
+          </p>
+        </div>
+        <div className="space-y-2.5 pt-2">
+          <Link
+            href="/login?callbackUrl=/create"
+            className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.01] flex items-center justify-center gap-2 text-sm"
+          >
+            <span>Đăng Nhập Ngay</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link
+            href="/register?callbackUrl=/create"
+            className="w-full py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-semibold rounded-xl text-xs transition-colors flex items-center justify-center gap-1.5"
+          >
+            <span>Chưa có tài khoản? Đăng ký tại đây</span>
+          </Link>
+          <Link
+            href="/"
+            className="w-full py-2 text-slate-500 hover:text-slate-800 dark:hover:text-slate-300 text-xs font-medium flex items-center justify-center gap-1.5"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Quay về trang chủ</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-pop">

@@ -1,15 +1,35 @@
 // Script khởi tạo dữ liệu mẫu (Seeding) cho QuickQuiz
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("Đang khởi tạo dữ liệu mẫu trắc nghiệm...");
+  console.log("Đang khởi tạo tài khoản Admin và dữ liệu mẫu...");
 
+  // 1. Tạo tài khoản Admin tối cao
+  const adminPasswordHash = bcrypt.hashSync("24092005@Khoa", 10);
+  const adminUser = await (prisma as any).user.upsert({
+    where: { email: "khoanv249@gmail.com" },
+    update: {
+      passwordHash: adminPasswordHash,
+      role: "ADMIN",
+    },
+    create: {
+      name: "Khoa Admin",
+      email: "khoanv249@gmail.com",
+      passwordHash: adminPasswordHash,
+      role: "ADMIN",
+    },
+  });
+  console.log(`Đã khởi tạo thành công tài khoản Admin: ${adminUser.email} (Role: ${adminUser.role})`);
+
+  // 2. Tạo đề mẫu DEMO101 liên kết với tài khoản Admin
   const demoQuiz = await prisma.quiz.upsert({
     where: { shareCode: "DEMO101" },
     update: {
       editPasscode: "DEMO123",
+      userId: adminUser.id,
     } as any,
     create: {
       shareCode: "DEMO101",
@@ -81,6 +101,13 @@ async function main() {
   });
 
   console.log(`Đã khởi tạo thành công đề mẫu với mã: ${demoQuiz.shareCode}`);
+
+  // 3. Gán tất cả đề đã tạo trước khi có Auth (userId == null) về cho Admin
+  const updatedOldQuizzes = await (prisma as any).quiz.updateMany({
+    where: { userId: null },
+    data: { userId: adminUser.id },
+  });
+  console.log(`Đã gán ${updatedOldQuizzes.count} bộ đề cũ về cho tài khoản Admin: ${adminUser.email}`);
 }
 
 main()

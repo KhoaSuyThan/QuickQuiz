@@ -22,6 +22,8 @@ export interface QuizData {
   totalQuestions: number;
   playCount?: number;
   editPasscode?: string; // Mã PIN bảo mật chỉnh sửa
+  isOwner?: boolean;
+  canDelete?: boolean;
   createdAt?: string;
   questions: QuizQuestion[];
 }

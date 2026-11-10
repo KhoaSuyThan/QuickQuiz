@@ -5,6 +5,56 @@ Tất cả các thay đổi đáng chú ý của dự án FastQuiz sẽ được
 
 Phiên bản mới nhất sẽ luôn được cập nhật tự động lên đầu file.
 ---
+## [1.2.2] - 2026-11-10
+
+### Tích Hợp Xác Thực OTP Qua Gmail Thật & Nút Bật/Tắt Hiển Thị Mật Khẩu
+- **Xác Thực OTP 2 Bước Qua Gmail Thật (`/forgot-password`):**
+  - Tích hợp `nodemailer` kết nối với dịch vụ Gmail SMTP (`khoanv249@gmail.com`) gửi email mã OTP 6 số thực tế với mẫu email HTML chuyên nghiệp.
+  - Sinh mã xác thực OTP ngẫu nhiên 6 chữ số, ký số bảo mật bằng JWT và băm `bcrypt` với thời hạn hiệu lực chính xác 5 phút.
+  - Giao diện 2 bước trực quan: Bước 1 gửi mã OTP đến email, Bước 2 nhập OTP và tạo mật khẩu mới kèm nút đếm ngược 60 giây gửi lại mã và tùy chọn đổi email.
+- **Nút Con Mắt Ẩn/Hiện Mật Khẩu (Show/Hide Password):**
+  - Tích hợp nút toggle con mắt (`Eye` / `EyeOff`) tại tất cả các ô nhập mật khẩu:
+    - Trang Đăng Nhập (`/login`)
+    - Trang Đăng Ký (`/register`)
+    - Trang Quên Mật Khẩu (`/forgot-password`)
+    - Modal Đổi Mật Khẩu trên thanh điều hướng (`Navbar`)
+
+## [1.2.1] - 2026-11-10
+
+- **Tối Ưu Giao Diện Thanh Điều Hướng (Navbar):**
+  - Loại bỏ hiệu ứng khung tròn skeleton xám đen nhấp nháy khi tải phiên người dùng, giúp giao diện hiển thị mượt mà và không bị chớp giật.
+- **Bắt Buộc Đăng Nhập Để Làm Bài & Tạo Đề:**
+  - Trang làm bài thi (`/quiz/[code]`) và tạo đề thi (`/create`) hiển thị thông báo yêu cầu đăng nhập đối với khách chưa có tài khoản, tự động lưu `callbackUrl` để chuyển hướng ngay sau khi đăng nhập thành công.
+  - API tạo đề thi (`POST /api/quizzes`) yêu cầu xác thực phiên đăng nhập hợp lệ.
+- **Quyền Sở Hữu Đề Cũ Cho Admin:**
+  - Toàn bộ các bộ đề đã tạo trước khi có Auth (`userId: null`) đã được tự động gán quyền sở hữu về cho tài khoản Admin `khoanv249@gmail.com` qua seed script.
+- **Phân Quyền Xóa Bộ Đề Thi (Tác Giả & Admin):**
+  - Bổ sung API `DELETE /api/quizzes/[code]` cho phép người tạo và Admin xóa vĩnh viễn đề thi.
+  - Thêm nút "Xóa đề" trực tiếp trên màn hình cấu hình làm bài (`QuizRunner`), trên thẻ card tại trang chủ (`/`), và trong trang cá nhân (`/my-quizzes`).
+- **Trang Quên Mật Khẩu & Tiêu Chuẩn Mật Khẩu Nghiêm Ngặt:**
+  - Thay thế cơ chế khôi phục trước đó bằng tính năng Quên mật khẩu chuẩn (`/forgot-password`) với liên kết trực tiếp trên trang đăng nhập (`/login`).
+  - Áp dụng kiểm tra độ mạnh mật khẩu (`validatePasswordStrength`): Bắt buộc tối thiểu 8 ký tự, gồm ít nhất 1 chữ cái, 1 chữ số và 1 ký tự đặc biệt cho mọi tính năng Đăng ký, Đổi mật khẩu và Quên mật khẩu.
+
+## [1.2.0] - 2026-11-10
+
+### Hoàn Thành Gộp Phase 2 & 3: Hệ Thống Tài Khoản (Auth Basic) & Trang Quản Trị (Admin Dashboard)
+- **Hệ Thống Xác Thực & Quản Lý Phiên (JWT & Cookies):**
+  - Đăng ký tài khoản (`/register`), Đăng nhập (`/login`), Đăng xuất (`/api/auth/logout`) với mật khẩu được mã hóa băm bằng `bcryptjs`.
+  - Phiên làm việc được bảo vệ bằng JWT token trong HTTP-only Cookie (`jose`).
+  - Hỗ trợ đổi mật khẩu trực tiếp trong modal Header (`/api/auth/change-password`).
+  - Tự động tạo tài khoản Quản trị viên (Admin) tối cao: `khoanv249@gmail.com` với role `ADMIN`.
+- **Trang Quản Trị Hệ Thống Toàn Diện (`/admin`):**
+  - Chỉ hiển thị và cấp quyền truy cập cho tài khoản có vai trò `ADMIN`.
+  - *KPI Dashboard:* Thống kê trực quan Tổng số bộ đề, Tổng số câu hỏi, Tổng lượt người dùng làm bài và Tổng thành viên.
+  - *Quản Lý Bộ Đề:* Bảng dữ liệu tìm kiếm realtime theo tiêu đề hoặc mã đề, hiển thị tác giả, số câu, lượt thi, nút Xem, Sửa đề và Xóa đề vĩnh viễn.
+  - *Khóa Khôi Phục Khẩn Cấp Admin (`/admin/recovery`):* Cho phép chủ sở hữu đặt lại mật khẩu admin bằng `ADMIN_SECRET_KEY` mà không lo mất tài khoản.
+- **Trang Quản Lý "Bộ Đề Của Tôi" (`/my-quizzes`):**
+  - Liệt kê toàn bộ các đề thi do chính tài khoản tạo ra trên cơ sở dữ liệu cloud.
+  - Tự động liên kết `userId` khi tạo đề mới nếu người dùng đã đăng nhập.
+- **Tối Ưu Giao Diện Thanh Điều Hướng (Navbar):**
+  - Tích hợp Avatar, tên người dùng, Menu Dropdown và huy hiệu nút "Admin" nhanh cho Quản trị viên.
+- **Cơ Sở Dữ Liệu:** Đã bổ sung bảng `users` và trường liên kết `user_id` trong bảng `quizzes` trên PostgreSQL Neon, cập nhật script SQL và seeding tự động.
+
 ## [1.1.0] - 2026-11-10
 
 ### Hoàn Thành Phase 1: Chức Năng Chỉnh Sửa Bộ Đề Thi (`/quiz/[code]/edit`)

@@ -7,6 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id           String   @id @default(uuid())
+  name         String   @db.VarChar(100)
+  email        String   @unique @db.VarChar(255)
+  passwordHash String   @map("password_hash") @db.VarChar(255)
+  role         String   @default("USER") @db.VarChar(20) // "USER" hoặc "ADMIN"
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
+  quizzes      Quiz[]
+
+  @@map("users")
+  @@index([email])
+}
+
 model Quiz {
   id             String     @id @default(uuid())
   shareCode      String     @unique @map("share_code") @db.VarChar(10)
@@ -15,12 +29,15 @@ model Quiz {
   totalQuestions Int        @default(0) @map("total_questions")
   playCount      Int        @default(0) @map("play_count")
   editPasscode   String?    @map("edit_passcode") @db.VarChar(50) // Mã PIN bảo mật chỉnh sửa bộ đề
+  userId         String?    @map("user_id") // ID tài khoản người tạo (nếu có đăng nhập)
+  user           User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt      DateTime   @default(now()) @map("created_at")
   updatedAt      DateTime   @default(now()) @updatedAt @map("updated_at")
   questions      Question[]
 
   @@map("quizzes")
   @@index([shareCode])
+  @@index([userId])
 }
 
 model Question {
