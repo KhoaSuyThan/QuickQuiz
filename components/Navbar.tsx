@@ -157,11 +157,13 @@ export default function Navbar() {
               placeholder="Nhập mã đề (VD: DEMO101)..."
               value={quickCode}
               onChange={(e) => setQuickCode(e.target.value)}
+              suppressHydrationWarning
               className="w-full text-xs font-mono uppercase bg-slate-100 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 rounded-lg pl-3 pr-8 py-2 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
             />
             <button
               type="submit"
               aria-label="Vào làm bài"
+              suppressHydrationWarning
               className="absolute right-1.5 p-1 rounded-md text-slate-400 hover:text-blue-600 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
             >
               <ArrowRight className="w-4 h-4" />

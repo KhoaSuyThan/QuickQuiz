@@ -5,6 +5,46 @@ Tất cả các thay đổi đáng chú ý của dự án FastQuiz sẽ được
 
 Phiên bản mới nhất sẽ luôn được cập nhật tự động lên đầu file.
 ---
+## [1.4.3] - 2026-11-10
+
+### Nâng Cấp Ảnh QR Siêu Nét & Tối Ưu Tách Biệt 2 Chế Độ Hiển Thị
+- **Cắt Ảnh Từ Bản Gốc Siêu Nét:**
+  - **Cửa sổ thu nhỏ & Thumbnail:** Sử dụng ảnh [public/donate_qr_only.png](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/public/donate_qr_only.png) cắt riêng trọn vẹn khối mã QR vuông vắn 1:1, siêu nét và sạch sẽ.
+  - **Cửa sổ phóng to:** Sử dụng ảnh [public/donate_qr_card.png](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/public/donate_qr_card.png) bao gồm đầy đủ logo & chữ VietComBank phía trên, mã QR ở giữa và 2 logo VietQR / Napas 247 phía dưới.
+  - Dọn dẹp sạch sẽ toàn bộ các tệp ảnh mờ cũ.
+
+## [1.4.2] - 2026-11-10
+
+### Chuẩn Hóa Ảnh QR Mời Caffe & Thu Gọn Kích Thước Hộp Thoại
+- **Sử Dụng Ảnh QR Chuẩn (Ảnh 2):**
+  - Chuyển toàn bộ hiển thị sang ảnh mã QR chuẩn gồm logo Vietcombank, mã QR vuông và logo VietQR/Napas247.
+  - Thu gọn kích thước hộp thoại phóng to xuống mức vừa vặn (`max-w-[290px]`), cân đối và thoáng mắt.
+  - Dọn dẹp toàn bộ các tệp ảnh cắt tạm không cần thiết trong thư mục `public/`.
+
+## [1.4.1] - 2026-11-10
+
+### Khắc Phục Lỗi Hydration Mismatch & Nâng Cấp Hộp Thoại QR Mời Caffe
+- **Sửa Triệt Để Cảnh Báo Hydration Mismatch:**
+  - Bổ sung `suppressHydrationWarning` vào thẻ `<html>`, `<body>` và các phần tử `<input>`, `<button>` để ngăn trình duyệt cảnh báo khi các tiện ích mở rộng (như Bitwarden, LastPass, autofill extensions) chèn thuộc tính lạ (`fdprocessedid`).
+- **Nâng Cấp Hộp Thoại Mời Caffe Thông Minh (Floating Card):**
+  - Chuyển sang dạng hộp thoại nổi góc dưới bên phải (`Floating Popover`), không dùng lớp phủ đen (`backdrop`) che mờ màn hình, giúp người dùng làm bài không bị gián đoạn.
+  - Cắt mã QR thành hình vuông gọn gàng (`aspect-square`), loại bỏ các khoảng viền xanh thừa dài ngoằng.
+  - Tích hợp nút **"Phóng to"** (`Maximize2`) để người dùng chủ động xem toàn cảnh thẻ ngân hàng Vietcombank to rõ nét khi có nhu cầu.
+
+## [1.4.0] - 2026-11-10
+
+### Hệ Thống Quản Lý Người Dùng (Admin User Management) & Footer Mời Caffe
+- **Hệ Thống Quản Lý Người Dùng Cho Admin:**
+  - Bổ sung tab **"Quản Lý Người Dùng"** trong trang Admin Dashboard (`/admin`).
+  - Hỗ trợ xem danh sách toàn bộ thành viên, avatar đại diện, email, ngày tham gia và số lượng đề thi đã xuất bản.
+  - Tìm kiếm thời gian thực theo tên hoặc email thành viên.
+  - Chức năng phân quyền: Nâng/hạ quyền quản trị viên (`USER` <-> `ADMIN`) linh hoạt.
+  - Chức năng xóa tài khoản vi phạm và bảo vệ an toàn tuyệt đối cho tài khoản Quản trị viên tối cao.
+- **Footer Tương Tác: Mời Caffe & Facebook Cá Nhân:**
+  - Thêm nút **"Mời caffe" ☕** kèm ảnh thu nhỏ mã QR Vietcombank tại góc footer.
+  - Tích hợp Modal phóng to toàn màn hình hiển thị mã QR Vietcombank sắc nét, kèm thông tin tài khoản (Chủ TK: `NGUYEN VO LE KHOA`, STK: `1038907514`, Vietcombank PGD Đức Phổ) và nút sao chép STK 1 chạm.
+  - Thêm liên kết Facebook cá nhân chính thức: `https://www.facebook.com/lekhoa.nguyenvo.7`.
+
 ## [1.3.2] - 2026-11-10
 
 ### Tối Ưu Bố Cục Chuẩn Bị Làm Bài: Đặt Cạnh Nhau & Tinh Gọn Thời Gian
