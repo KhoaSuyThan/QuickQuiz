@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { QuizQuestion, QuizData } from "@/lib/types";
 import { prepareQuizQuestions } from "@/lib/shuffle";
-import { Check, X, ArrowRight, Play, RotateCcw, HelpCircle, CheckCircle, XCircle } from "lucide-react";
+import { Check, X, ArrowRight, Play, RotateCcw, HelpCircle, CheckCircle, XCircle, Edit3 } from "lucide-react";
 import QuizResult from "./QuizResult";
 
 interface QuizRunnerProps {
@@ -136,9 +137,19 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
             </p>
           )}
           {quizData.shareCode && (
-            <span className="inline-block mt-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
-              Mã đề: {quizData.shareCode}
-            </span>
+            <div className="flex items-center justify-center gap-2 pt-1">
+              <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
+                Mã đề: {quizData.shareCode}
+              </span>
+              <Link
+                href={`/quiz/${quizData.shareCode || "DEMO101"}/edit`}
+                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
+                title="Chỉnh sửa câu hỏi và đáp án của đề này"
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                <span>Sửa đề</span>
+              </Link>
+            </div>
           )}
         </div>
 

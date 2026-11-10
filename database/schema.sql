@@ -6,9 +6,13 @@ CREATE TABLE IF NOT EXISTS quizzes (
     description TEXT,
     total_questions INT NOT NULL DEFAULT 0,
     play_count INT NOT NULL DEFAULT 0,
+    edit_passcode VARCHAR(50), -- Mã PIN bảo vệ quyền chỉnh sửa bộ đề
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Hỗ trợ migration nếu bảng đã tồn tại
+ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS edit_passcode VARCHAR(50);
 
 -- Chỉ mục tìm kiếm nhanh theo mã chia sẻ
 CREATE INDEX IF NOT EXISTS idx_quizzes_share_code ON quizzes(share_code);

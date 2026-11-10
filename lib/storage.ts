@@ -80,3 +80,27 @@ export async function getLocalQuizById(id: string): Promise<LocalSavedQuiz | und
   if (!db) return undefined;
   return await db.get("my_quizzes", id);
 }
+
+// Tìm kiếm bộ đề cục bộ theo mã chia sẻ shareCode
+export async function getLocalQuizByCode(code: string): Promise<LocalSavedQuiz | undefined> {
+  const db = await getDB();
+  if (!db) return undefined;
+  const list = await db.getAll("my_quizzes");
+  const clean = code.toUpperCase().trim();
+  return list.find((q) => q.shareCode?.toUpperCase() === clean || q.id === code);
+}
+
+// Cập nhật nội dung bộ đề cục bộ trong IndexedDB
+export async function updateLocalQuiz(quiz: LocalSavedQuiz): Promise<void> {
+  const db = await getDB();
+  if (!db) return;
+  await db.put("my_quizzes", quiz);
+}
+
+// Xóa bộ đề khỏi IndexedDB
+export async function deleteLocalQuiz(id: string): Promise<void> {
+  const db = await getDB();
+  if (!db) return;
+  await db.delete("my_quizzes", id);
+}
+

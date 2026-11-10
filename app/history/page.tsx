@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getAllAttempts, getAllLocalQuizzes } from "@/lib/storage";
 import { QuizAttemptRecord, LocalSavedQuiz } from "@/lib/types";
-import { History, Calendar, CheckCircle2, XCircle, RotateCcw, AlertTriangle, ArrowRight, BookOpen } from "lucide-react";
+import { History, Calendar, CheckCircle2, XCircle, RotateCcw, AlertTriangle, ArrowRight, BookOpen, Edit3 } from "lucide-react";
 import QuizRunner from "@/components/QuizRunner";
 
 export default function HistoryPage() {
@@ -171,13 +171,23 @@ export default function HistoryPage() {
                     Mã: {q.shareCode} • {q.totalQuestions} câu hỏi
                   </span>
                 </div>
-                <Link
-                  href={`/quiz/${q.shareCode || q.id}`}
-                  className="font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 shrink-0"
-                >
-                  <span>Mở đề</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link
+                    href={`/quiz/${q.shareCode || q.id}/edit`}
+                    className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors flex items-center gap-1 font-semibold"
+                    title="Chỉnh sửa câu hỏi bộ đề này"
+                  >
+                    <Edit3 className="w-3.5 h-3.5" />
+                    <span>Sửa</span>
+                  </Link>
+                  <Link
+                    href={`/quiz/${q.shareCode || q.id}`}
+                    className="font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                  >
+                    <span>Mở đề</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
               </div>
             ))}
           </div>

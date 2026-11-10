@@ -5,6 +5,24 @@ Tất cả các thay đổi đáng chú ý của dự án FastQuiz sẽ được
 
 Phiên bản mới nhất sẽ luôn được cập nhật tự động lên đầu file.
 ---
+## [1.1.0] - 2026-11-10
+
+### Hoàn Thành Phase 1: Chức Năng Chỉnh Sửa Bộ Đề Thi (`/quiz/[code]/edit`)
+- **Trang Chỉnh Sửa Đề Thi Toàn Diện (`/quiz/[code]/edit`):** Cho phép nạp lại toàn bộ tiêu đề, mô tả và danh sách câu hỏi của bộ đề để cập nhật mà vẫn giữ nguyên mã chia sẻ `shareCode`.
+- **Bộ Soạn Thảo Đa Chế Độ (QuizEditor):** 
+  - *Chế độ Sửa Văn Bản (Text Editor):* Tự động chuyển đổi ngược các câu hỏi thành cú pháp chuẩn QuickQuiz với ký tự `*` ở đầu đáp án đúng, cho phép chỉnh sửa nội dung nhanh bằng text.
+  - *Chế độ Trực Quan (Visual List):* Cho phép xem từng thẻ câu hỏi, đổi đáp án đúng bằng radio button, sửa text trực tiếp, thêm hoặc xóa câu hỏi linh hoạt.
+- **Cơ chế Phân Quyền Bảo Vệ Bằng Mã PIN (editPasscode):**
+  - Tự động sinh mã PIN bảo mật dạng `ED-XXXXXX` khi tạo đề mới và lưu vào cột `edit_passcode` trên PostgreSQL.
+  - Tự động lưu mã PIN vào `IndexedDB` trên trình duyệt người tạo để tự động xác thực mà không cần gõ lại mã PIN.
+  - Hỗ trợ nhập mã PIN khi chỉnh sửa trên thiết bị khác để ngăn chặn người lạ can thiệp đề thi.
+- **API Cập Nhật Dữ Liệu (`PUT /api/quizzes/[code]`):** Cập nhật an toàn với Prisma Transaction, xóa câu hỏi cũ và thay thế bằng danh sách câu hỏi mới, đồng bộ lại IndexedDB cục bộ.
+- **Tích Hợp Nút Chỉnh Sửa Thuận Tiện:**
+  - Bổ sung nút "Sửa đề" trên màn hình chờ của bộ đề ([QuizRunner.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/components/QuizRunner.tsx)).
+  - Bổ sung nút "Sửa" trực tiếp trên thẻ card đề thi tại trang chủ ([app/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/page.tsx)).
+  - Bổ sung nút "Sửa" trong danh sách đề đã tạo tại trang Lịch sử ([app/history/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/history/page.tsx)).
+- **Cơ Sở Dữ Liệu & Khắc phục kiểu TypeScript:** Đã đồng bộ schema Prisma và script SQL `database/schema.sql`, tối ưu kiểu an toàn trong `database/seed.ts`.
+
 ## [1.0.7] - 2026-11-09
 
 ### Tích hợp Prompt Mẫu Cho AI & Nút Sao Chép 1-Click

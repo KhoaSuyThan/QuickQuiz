@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Zap, PlusCircle, ArrowRight, BookOpen, Clock, Sparkles } from "lucide-react";
+import { Zap, PlusCircle, ArrowRight, BookOpen, Clock, Sparkles, Edit3 } from "lucide-react";
 import { getAllLocalQuizzes } from "@/lib/storage";
 import { LocalSavedQuiz } from "@/lib/types";
 
@@ -163,13 +163,23 @@ export default function HomePage() {
                   <span className="text-slate-500 font-medium">
                     {quiz.totalQuestions} câu hỏi
                   </span>
-                  <Link
-                    href={`/quiz/${quiz.shareCode || quiz.id}`}
-                    className="font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                  >
-                    <span>Làm bài</span>
-                    <ArrowRight className="w-3 h-3" />
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/quiz/${quiz.shareCode || quiz.id}/edit`}
+                      className="text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 font-semibold flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      title="Chỉnh sửa câu hỏi bộ đề này"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Sửa</span>
+                    </Link>
+                    <Link
+                      href={`/quiz/${quiz.shareCode || quiz.id}`}
+                      className="font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                    >
+                      <span>Làm bài</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             ))}

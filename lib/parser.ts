@@ -175,3 +175,28 @@ export function parseExcel(data: ArrayBuffer): QuizQuestion[] {
 
   return questions;
 }
+
+/**
+ * Chuyển đổi danh sách câu hỏi thành văn bản chuẩn QuickQuiz (phục vụ chỉnh sửa văn bản nhanh)
+ */
+export function questionsToRawText(questions: QuizQuestion[]): string {
+  const letters = ["A", "B", "C", "D", "E", "F"];
+  return questions
+    .map((q, qIdx) => {
+      let block = `Câu ${qIdx + 1}: ${q.questionText}\n`;
+      q.options.forEach((opt, optIdx) => {
+        const prefix = letters[optIdx] || String(optIdx + 1);
+        if (opt.is_correct) {
+          block += `*${prefix}. ${opt.text}\n`;
+        } else {
+          block += `${prefix}. ${opt.text}\n`;
+        }
+      });
+      if (q.explanation && q.explanation.trim()) {
+        block += `Giải thích: ${q.explanation.trim()}\n`;
+      }
+      return block.trim();
+    })
+    .join("\n\n");
+}
+

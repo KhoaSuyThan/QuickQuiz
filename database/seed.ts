@@ -8,12 +8,15 @@ async function main() {
 
   const demoQuiz = await prisma.quiz.upsert({
     where: { shareCode: "DEMO101" },
-    update: {},
+    update: {
+      editPasscode: "DEMO123",
+    } as any,
     create: {
       shareCode: "DEMO101",
       title: "Bộ Đề Mẫu Trắc Nghiệm Kiến Thức Chung",
       description: "Đề thi mẫu gồm 5 câu hỏi kiểm tra khả năng xáo trộn và chấm điểm tức thì.",
       totalQuestions: 5,
+      editPasscode: "DEMO123", // Mã PIN chỉnh sửa mẫu cho bộ đề DEMO101
       questions: {
         create: [
           {
@@ -74,7 +77,7 @@ async function main() {
           },
         ],
       },
-    },
+    } as any,
   });
 
   console.log(`Đã khởi tạo thành công đề mẫu với mã: ${demoQuiz.shareCode}`);

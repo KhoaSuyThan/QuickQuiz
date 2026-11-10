@@ -21,6 +21,7 @@ export interface QuizData {
   description?: string;
   totalQuestions: number;
   playCount?: number;
+  editPasscode?: string; // Mã PIN bảo mật chỉnh sửa
   createdAt?: string;
   questions: QuizQuestion[];
 }
@@ -49,6 +50,7 @@ export interface LocalSavedQuiz {
   title: string;
   description?: string;
   totalQuestions: number;
+  editPasscode?: string; // Mã PIN chỉnh sửa lưu cục bộ
   createdAt: string;
   questions: QuizQuestion[];
 }

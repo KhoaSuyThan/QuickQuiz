@@ -186,6 +186,7 @@ export default function Uploader() {
 
       const finalShareCode = data.shareCode || "LOCAL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
       const finalId = data.quizId || "local-" + Date.now();
+      const editPasscode = data.editPasscode;
 
       // 2. Lưu bộ đề vào IndexedDB trên máy người dùng để quản lý cục bộ
       await saveLocalQuiz({
@@ -194,6 +195,7 @@ export default function Uploader() {
         title: title.trim(),
         description: description.trim(),
         totalQuestions: parsedQuestions.length,
+        editPasscode,
         createdAt: new Date().toISOString(),
         questions: parsedQuestions,
       });
