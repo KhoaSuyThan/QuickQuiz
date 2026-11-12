@@ -30,12 +30,14 @@ async function main() {
     update: {
       editPasscode: "DEMO123",
       userId: adminUser.id,
+      isPublic: true,
     } as any,
     create: {
       shareCode: "DEMO101",
       title: "Bộ Đề Mẫu Trắc Nghiệm Kiến Thức Chung",
       description: "Đề thi mẫu gồm 5 câu hỏi kiểm tra khả năng xáo trộn và chấm điểm tức thì.",
       totalQuestions: 5,
+      isPublic: true,
       editPasscode: "DEMO123", // Mã PIN chỉnh sửa mẫu cho bộ đề DEMO101
       questions: {
         create: [

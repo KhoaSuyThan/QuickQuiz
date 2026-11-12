@@ -5,6 +5,24 @@ Tất cả các thay đổi đáng chú ý của dự án FastQuiz sẽ được
 
 Phiên bản mới nhất sẽ luôn được cập nhật tự động lên đầu file.
 ---
+## [1.5.0] - 2026-11-12
+
+### Kho Đề Thi Cộng Đồng & Chặn Trùng Lặp Đáp Án
+- **Kho Đề Thi Cộng Đồng (Public Community Quizzes):**
+  - Bổ sung cột `is_public` vào bảng `quizzes` trong cơ sở dữ liệu Neon ([prisma/schema.prisma](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/prisma/schema.prisma) và [database/schema.sql](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/database/schema.sql)).
+  - Xây dựng API `GET /api/quizzes/community` lấy danh sách toàn bộ các đề thi công khai, hỗ trợ tìm kiếm từ khóa và sắp xếp theo lượt làm / thời gian.
+  - Xây dựng giao diện trang mới [app/community/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/community/page.tsx) ("Kho Đề Thi") hiển thị thẻ đề thi chuyên nghiệp kèm tên tác giả tạo đề (`Tạo bởi: ...`).
+  - Bổ sung tab "Kho Đề Thi" trên thanh điều hướng [components/Navbar.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/components/Navbar.tsx).
+- **Đồng Bộ Đề Thi Theo Tài Khoản & Tùy Chọn Public / Private:**
+  - Cập nhật trang chủ [app/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/page.tsx): Đổi tiêu đề thành "Đề thi của bạn", ưu tiên tải danh sách đề thuộc tài khoản đã đăng nhập từ đám mây.
+  - Bổ sung **thanh gạt (Toggle Switch Slider) trực tiếp trên từng thẻ card đề thi** tại trang chủ và trang [app/my-quizzes/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/my-quizzes/page.tsx), cho phép người dùng gạt chuyển đổi Công khai / Riêng tư tức thì với hiệu ứng mượt mà.
+  - Xây dựng API `PATCH /api/quizzes/[code]` hỗ trợ cập nhật nhanh trạng thái `isPublic` mà không cần gửi lại toàn bộ danh sách câu hỏi.
+  - Nâng cấp thanh gạt slider chuẩn hiện đại trong form tạo đề ([components/Uploader.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/components/Uploader.tsx)) và form sửa đề ([components/QuizEditor.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/components/QuizEditor.tsx)).
+  - Khắc phục triệt để lỗi TypeScript `ts(2353)` trong [app/api/quizzes/[code]/route.ts](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/api/quizzes/[code]/route.ts).
+- **Kiểm Soát & Chặn Trùng Lặp Đáp Án (Duplicate Answers Validation):**
+  - Xây dựng hàm kiểm tra `hasDuplicateAnswers` trong [lib/parser.ts](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/lib/parser.ts) chuẩn hóa không phân biệt chữ hoa/thường và khoảng trắng thừa.
+  - Áp dụng kiểm tra chặn trùng đáp án trên toàn bộ quy trình: Bộ phân tích text/CSV/Excel, form tạo đề Uploader, form chỉnh sửa QuizEditor và các API lưu trữ phía Server (`POST /api/quizzes`, `PUT /api/quizzes/[code]`).
+
 ## [1.4.3] - 2026-11-10
 
 ### Nâng Cấp Ảnh QR Siêu Nét & Tối Ưu Tách Biệt 2 Chế Độ Hiển Thị

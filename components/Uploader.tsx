@@ -17,9 +17,11 @@ import {
   ChevronDown,
   ChevronUp,
   Lock,
-  ArrowLeft
+  ArrowLeft,
+  Globe,
+  EyeOff
 } from "lucide-react";
-import { parseRawText, parseCSV, parseExcel } from "@/lib/parser";
+import { parseRawText, parseCSV, parseExcel, hasDuplicateAnswers } from "@/lib/parser";
 import { QuizQuestion } from "@/lib/types";
 import { saveLocalQuiz } from "@/lib/storage";
 
@@ -88,6 +90,7 @@ export default function Uploader() {
   const [rawText, setRawText] = useState(DEFAULT_SAMPLE_TEXT);
   const [title, setTitle] = useState("Bộ Đề Trắc Nghiệm Mới");
   const [description, setDescription] = useState("Bộ câu hỏi ôn tập kiến thức.");
+  const [isPublic, setIsPublic] = useState(true); // Tùy chọn Công khai (Public) hoặc Riêng tư (Private)
   const [parsedQuestions, setParsedQuestions] = useState<QuizQuestion[]>(() => parseRawText(DEFAULT_SAMPLE_TEXT));
   const [isParsing, setIsParsing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -194,6 +197,13 @@ export default function Uploader() {
       return;
     }
 
+    for (let i = 0; i < parsedQuestions.length; i++) {
+      if (hasDuplicateAnswers(parsedQuestions[i].options)) {
+        setErrorMsg(`Câu hỏi số ${i + 1} có các đáp án bị trùng lặp nội dung. Vui lòng kiểm tra lại!`);
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setErrorMsg("");
 
@@ -206,6 +216,7 @@ export default function Uploader() {
           title: title.trim(),
           description: description.trim(),
           questions: parsedQuestions,
+          isPublic,
         }),
       });
 
@@ -225,6 +236,7 @@ export default function Uploader() {
         title: title.trim(),
         description: description.trim(),
         totalQuestions: parsedQuestions.length,
+        isPublic,
         editPasscode,
         createdAt: new Date().toISOString(),
         questions: parsedQuestions,
@@ -326,6 +338,64 @@ export default function Uploader() {
             onChange={(e) => setDescription(e.target.value)}
             className="w-full text-sm bg-slate-50 dark:bg-slate-800/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2 text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
           />
+        </div>
+
+        {/* Lựa chọn Chế độ chia sẻ: Công khai (Public) hoặc Riêng tư (Private) */}
+        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200">
+              {isPublic ? (
+                <>
+                  <Globe className="w-4 h-4 text-emerald-500" />
+                  <span>Công khai (Public Community)</span>
+                </>
+              ) : (
+                <>
+                  <Lock className="w-4 h-4 text-amber-500" />
+                  <span>Riêng tư (Private Only)</span>
+                </>
+              )}
+            </div>
+            <p className="text-[11px] text-slate-500">
+              {isPublic
+                ? "Bộ đề sẽ xuất hiện tại Kho Đề Thi chung để tất cả mọi người cùng học và thử sức."
+                : "Chỉ những người có mã đề hoặc liên kết trực tiếp mới có thể truy cập."}
+            </p>
+          </div>
+
+          <button
+            type="button"
+            role="switch"
+            aria-checked={isPublic}
+            onClick={() => setIsPublic(!isPublic)}
+            className="shrink-0 flex items-center gap-3 p-1.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group"
+          >
+            <div className="text-right">
+              <span className={`text-xs font-bold block transition-colors ${
+                isPublic ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
+              }`}>
+                {isPublic ? "Đang bật: Công khai" : "Đang bật: Riêng tư"}
+              </span>
+              <span className="text-[10px] text-slate-400">
+                {isPublic ? "Mọi người đều tìm thấy" : "Chỉ ai có mã mới xem"}
+              </span>
+            </div>
+
+            {/* Thanh gạt Slider chuẩn */}
+            <div
+              className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                isPublic ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-700"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-flex h-6 w-6 transform items-center justify-center rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                  isPublic ? "translate-x-5 text-emerald-600" : "translate-x-0 text-slate-400"
+                }`}
+              >
+                {isPublic ? <Globe className="w-3.5 h-3.5" /> : <Lock className="w-3.5 h-3.5" />}
+              </span>
+            </div>
+          </button>
         </div>
       </div>
 

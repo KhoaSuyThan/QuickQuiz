@@ -22,6 +22,7 @@ export interface QuizData {
   totalQuestions: number;
   playCount?: number;
   editPasscode?: string; // Mã PIN bảo mật chỉnh sửa
+  isPublic?: boolean; // Trạng thái công khai hay riêng tư
   isOwner?: boolean;
   canDelete?: boolean;
   createdAt?: string;
@@ -53,6 +54,7 @@ export interface LocalSavedQuiz {
   description?: string;
   totalQuestions: number;
   editPasscode?: string; // Mã PIN chỉnh sửa lưu cục bộ
+  isPublic?: boolean; // Trạng thái công khai hay riêng tư
   createdAt: string;
   questions: QuizQuestion[];
 }

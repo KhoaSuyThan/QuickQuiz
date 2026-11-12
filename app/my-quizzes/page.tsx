@@ -12,7 +12,9 @@ import {
   Loader2, 
   AlertCircle,
   ArrowRight,
-  UserCheck
+  UserCheck,
+  Globe,
+  Lock
 } from "lucide-react";
 
 interface MyQuizItem {
@@ -22,6 +24,7 @@ interface MyQuizItem {
   description: string | null;
   totalQuestions: number;
   playCount: number;
+  isPublic?: boolean;
   createdAt: string;
 }
 
@@ -30,6 +33,7 @@ export default function MyQuizzesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
   const fetchMyQuizzes = async () => {
     setIsLoading(true);
@@ -79,6 +83,41 @@ export default function MyQuizzesPage() {
       alert("Lỗi máy chủ khi xóa đề");
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  // Gạt chuyển nhanh trạng thái Công khai / Riêng tư ngay trên thẻ Card
+  const handleTogglePublic = async (quiz: MyQuizItem) => {
+    const newStatus = quiz.isPublic === false ? true : false;
+    setTogglingId(quiz.id);
+
+    // Cập nhật giao diện tức thì (Optimistic UI)
+    setQuizzes((prev) =>
+      prev.map((q) => (q.id === quiz.id ? { ...q, isPublic: newStatus } : q))
+    );
+
+    try {
+      const res = await fetch(`/api/quizzes/${quiz.shareCode || quiz.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPublic: newStatus }),
+      });
+
+      if (!res.ok) {
+        // Rollback nếu có lỗi
+        setQuizzes((prev) =>
+          prev.map((q) => (q.id === quiz.id ? { ...q, isPublic: !newStatus } : q))
+        );
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Không thể cập nhật trạng thái");
+      }
+    } catch (err) {
+      console.error("Lỗi khi chuyển trạng thái đề:", err);
+      setQuizzes((prev) =>
+        prev.map((q) => (q.id === quiz.id ? { ...q, isPublic: !newStatus } : q))
+      );
+    } finally {
+      setTogglingId(null);
     }
   };
 
@@ -163,9 +202,40 @@ export default function MyQuizzesPage() {
             >
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-                  <span className="font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
-                    {quiz.shareCode}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
+                      {quiz.shareCode}
+                    </span>
+
+                    {/* Thanh gạt Public / Private ngay trên Card */}
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={quiz.isPublic !== false}
+                      disabled={togglingId === quiz.id}
+                      onClick={() => handleTogglePublic(quiz)}
+                      className={`relative inline-flex items-center h-6 rounded-full pl-1.5 pr-2.5 gap-1.5 text-[10px] font-bold border transition-all cursor-pointer shadow-2xs hover:scale-102 ${
+                        quiz.isPublic !== false
+                          ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100"
+                          : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
+                      }`}
+                      title={`Nhấp để gạt sang ${quiz.isPublic !== false ? "Riêng tư" : "Công khai"}`}
+                    >
+                      {/* Thanh trượt slider mini chuẩn */}
+                      <div
+                        className={`w-8 h-4.5 rounded-full transition-colors flex items-center p-0.5 ${
+                          quiz.isPublic !== false ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                        }`}
+                      >
+                        <div
+                          className={`w-3.5 h-3.5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                            quiz.isPublic !== false ? "translate-x-3.5" : "translate-x-0"
+                          }`}
+                        />
+                      </div>
+                      <span>{quiz.isPublic !== false ? "Công khai" : "Riêng tư"}</span>
+                    </button>
+                  </div>
                   <span className="flex items-center gap-1">
                     <Clock className="w-3 h-3" />
                     {new Date(quiz.createdAt).toLocaleDateString("vi-VN")}

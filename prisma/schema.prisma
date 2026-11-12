@@ -29,6 +29,7 @@ model Quiz {
   totalQuestions Int        @default(0) @map("total_questions")
   playCount      Int        @default(0) @map("play_count")
   editPasscode   String?    @map("edit_passcode") @db.VarChar(50) // Mã PIN bảo mật chỉnh sửa bộ đề
+  isPublic       Boolean    @default(true) @map("is_public") // Công khai (Public) hoặc Riêng tư (Private)
   userId         String?    @map("user_id") // ID tài khoản người tạo (nếu có đăng nhập)
   user           User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt      DateTime   @default(now()) @map("created_at")
@@ -38,6 +39,7 @@ model Quiz {
   @@map("quizzes")
   @@index([shareCode])
   @@index([userId])
+  @@index([isPublic])
 }
 
 model Question {

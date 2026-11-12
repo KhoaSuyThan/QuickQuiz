@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
+import { hasDuplicateAnswers } from "@/lib/parser";
 
 interface QuestionItem {
   id: string;
@@ -81,6 +82,7 @@ export async function GET(
         description: quiz.description,
         totalQuestions: quiz.totalQuestions,
         playCount: forEdit ? quiz.playCount : quiz.playCount + 1,
+        isPublic: quizObj.isPublic ?? true,
         hasEditPasscode: !!quizObj.editPasscode,
         isOwner,
         canDelete,
@@ -137,11 +139,12 @@ export async function PUT(
     }
 
     const body = await req.json();
-    const { title, description, questions, editPasscode } = body as {
+    const { title, description, questions, editPasscode, isPublic } = body as {
       title: string;
       description?: string;
       questions: any[];
       editPasscode?: string;
+      isPublic?: boolean;
     };
 
     // Kiểm tra quyền chỉnh sửa: Admin hoặc chính chủ đăng nhập được miễn nhập mã PIN
@@ -172,6 +175,17 @@ export async function PUT(
       );
     }
 
+    // Kiểm tra không cho phép các đáp án trùng nhau trong từng câu hỏi
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i];
+      if (hasDuplicateAnswers(q.options)) {
+        return NextResponse.json(
+          { error: `Câu hỏi số ${i + 1} ("${q.questionText?.substring(0, 30)}...") có các đáp án bị trùng lặp nội dung. Vui lòng kiểm tra lại!` },
+          { status: 400 }
+        );
+      }
+    }
+
     // Tiến hành cập nhật an toàn trong Prisma Transaction
     await prisma.$transaction(async (tx) => {
       // 1. Xóa các câu hỏi cũ của bộ đề
@@ -186,6 +200,7 @@ export async function PUT(
           title: title.trim(),
           description: description?.trim() || null,
           totalQuestions: questions.length,
+          isPublic: isPublic !== undefined ? isPublic : existingObj.isPublic ?? true,
           updatedAt: new Date(),
           questions: {
             create: questions.map((q, idx) => ({
@@ -195,7 +210,7 @@ export async function PUT(
               options: q.options as any,
             })),
           },
-        },
+        } as any,
       });
     });
 
@@ -281,6 +296,64 @@ export async function DELETE(
       { error: "Không thể xóa bộ đề: " + (error?.message || "Lỗi máy chủ") },
       { status: 500 }
     );
+  }
+}
+
+// API Cập nhật nhanh trạng thái Công khai / Riêng tư (isPublic)
+export async function PATCH(
+  req: Request,
+  { params }: { params: Promise<{ code: string }> }
+) {
+  try {
+    const { code } = await params;
+    const cleanCode = code.toUpperCase().trim();
+
+    if (!prisma) {
+      return NextResponse.json({ error: "Cơ sở dữ liệu chưa sẵn sàng" }, { status: 503 });
+    }
+
+    const existingQuiz = await prisma.quiz.findFirst({
+      where: {
+        OR: [{ shareCode: cleanCode }, { id: code }],
+      },
+    });
+
+    if (!existingQuiz) {
+      return NextResponse.json({ error: "Không tìm thấy bộ đề" }, { status: 404 });
+    }
+
+    // Kiểm tra quyền: Admin hoặc tác giả tạo đề
+    const authUser = await getAuthUser();
+    const existingObj = existingQuiz as any;
+    const isAdmin = authUser?.role === "ADMIN";
+    const isAuthor = !!(authUser?.id && existingObj.userId && authUser.id === existingObj.userId);
+
+    if (!isAdmin && !isAuthor) {
+      return NextResponse.json(
+        { error: "Bạn không có quyền thay đổi trạng thái của bộ đề này!" },
+        { status: 403 }
+      );
+    }
+
+    const body = await req.json();
+    const newIsPublic = Boolean(body.isPublic);
+
+    const updated = await (prisma.quiz as any).update({
+      where: { id: existingQuiz.id },
+      data: {
+        isPublic: newIsPublic,
+        updatedAt: new Date(),
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      isPublic: updated.isPublic,
+      message: updated.isPublic ? "Đã chuyển sang Công khai" : "Đã chuyển sang Riêng tư",
+    });
+  } catch (error: any) {
+    console.error("Lỗi khi cập nhật trạng thái đề:", error);
+    return NextResponse.json({ error: "Lỗi máy chủ nội bộ" }, { status: 500 });
   }
 }
 

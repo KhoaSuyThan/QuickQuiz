@@ -1,7 +1,15 @@
-// Bộ phân tích dữ liệu câu hỏi từ Text, CSV và Excel cho QuickQuiz
 import Papa from "papaparse";
 import * as XLSX from "xlsx";
 import { QuizQuestion, QuizOption } from "./types";
+
+/**
+ * Kiểm tra xem trong một danh sách lựa chọn có đáp án nào bị trùng lặp nội dung hay không (không phân biệt hoa thường và khoảng trắng)
+ */
+export function hasDuplicateAnswers(options: { text: string }[]): boolean {
+  if (!options || !Array.isArray(options)) return false;
+  const texts = options.map((o) => (o.text || "").trim().toLowerCase()).filter((t) => t.length > 0);
+  return new Set(texts).size !== texts.length;
+}
 
 /**
  * Phân tích dữ liệu văn bản thô (Text Format) thành danh sách câu hỏi
@@ -57,9 +65,10 @@ export function parseRawText(rawText: string): QuizQuestion[] {
       }
     }
 
-    // Kiểm tra tính hợp lệ: từ 3 đến 6 lựa chọn, có câu hỏi và có ít nhất 1 đáp án đúng
+    // Kiểm tra tính hợp lệ: từ 3 đến 6 lựa chọn, có câu hỏi, có ít nhất 1 đáp án đúng và không bị trùng lặp đáp án
     const hasCorrect = rawOptions.some((o) => o.isCorrect);
-    if (rawOptions.length >= 3 && rawOptions.length <= 6 && questionText && hasCorrect) {
+    const hasDuplicates = hasDuplicateAnswers(rawOptions);
+    if (!hasDuplicates && rawOptions.length >= 3 && rawOptions.length <= 6 && questionText && hasCorrect) {
       const options: QuizOption[] = rawOptions.map((o, idx) => ({
         id: String(idx + 1),
         text: o.text,
@@ -115,7 +124,7 @@ export function parseCSV(csvContent: string): QuizQuestion[] {
       }
     }
 
-    if (options.length >= 3 && options.length <= 6) {
+    if (!hasDuplicateAnswers(options) && options.length >= 3 && options.length <= 6) {
       questions.push({
         questionText,
         options,
@@ -164,7 +173,7 @@ export function parseExcel(data: ArrayBuffer): QuizQuestion[] {
       }
     }
 
-    if (options.length >= 3 && options.length <= 6) {
+    if (!hasDuplicateAnswers(options) && options.length >= 3 && options.length <= 6) {
       questions.push({
         questionText,
         options,

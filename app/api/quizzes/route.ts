@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { QuizQuestion } from "@/lib/types";
 import { getAuthUser } from "@/lib/auth";
+import { hasDuplicateAnswers } from "@/lib/parser";
 
 // Bộ nhớ đệm giới hạn tần suất tạo đề (In-Memory Rate Limiting)
 const createQuizRateLimitMap = new Map<string, number[]>();
@@ -59,11 +60,12 @@ export async function POST(req: Request) {
     createQuizRateLimitMap.set(clientKey, userTimestamps);
 
     const body = await req.json();
-    const { title, description, questions, editPasscode: customPasscode } = body as {
+    const { title, description, questions, editPasscode: customPasscode, isPublic = true } = body as {
       title: string;
       description?: string;
       questions: QuizQuestion[];
       editPasscode?: string;
+      isPublic?: boolean;
     };
 
     if (!title || !questions || !Array.isArray(questions) || questions.length === 0) {
@@ -71,6 +73,17 @@ export async function POST(req: Request) {
         { error: "Dữ liệu bộ đề không hợp lệ hoặc thiếu câu hỏi" },
         { status: 400 }
       );
+    }
+
+    // Kiểm tra không cho phép các đáp án trùng nhau trong từng câu hỏi
+    for (let i = 0; i < questions.length; i++) {
+      const q = questions[i];
+      if (hasDuplicateAnswers(q.options)) {
+        return NextResponse.json(
+          { error: `Câu hỏi số ${i + 1} ("${q.questionText?.substring(0, 30)}...") có các đáp án bị trùng lặp nội dung. Vui lòng kiểm tra lại!` },
+          { status: 400 }
+        );
+      }
     }
 
     // 2. Giới hạn dung lượng tối đa 200 câu hỏi/đề thi
@@ -97,6 +110,7 @@ export async function POST(req: Request) {
           description: cleanDescription,
           shareCode,
           editPasscode,
+          isPublic: isPublic !== false, // Lưu trạng thái công khai hoặc riêng tư
           userId: authUser?.id || null, // Gắn tài khoản người tạo nếu đã đăng nhập
           totalQuestions: questions.length,
           questions: {
@@ -114,6 +128,7 @@ export async function POST(req: Request) {
         success: true,
         shareCode: createdQuiz.shareCode,
         quizId: createdQuiz.id,
+        isPublic: (createdQuiz as any).isPublic ?? true,
         editPasscode: (createdQuiz as any).editPasscode || editPasscode,
         savedToDatabase: true,
         message: "Bộ đề đã được lưu thành công vào PostgreSQL",
@@ -125,6 +140,7 @@ export async function POST(req: Request) {
       success: true,
       shareCode,
       quizId: "local-" + Date.now(),
+      isPublic: isPublic !== false,
       editPasscode,
       savedToDatabase: false,
       message: "Chưa cấu hình DATABASE_URL, bộ đề đã được lưu vào IndexedDB cục bộ của bạn.",

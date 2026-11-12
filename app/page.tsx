@@ -3,45 +3,161 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Zap, PlusCircle, ArrowRight, BookOpen, Clock, Sparkles, Edit3, Trash2 } from "lucide-react";
+import { 
+  Zap, 
+  PlusCircle, 
+  ArrowRight, 
+  BookOpen, 
+  Clock, 
+  Sparkles, 
+  Edit3, 
+  Trash2, 
+  Globe, 
+  Lock, 
+  UserCheck, 
+  LogIn 
+} from "lucide-react";
 import { getAllLocalQuizzes, deleteLocalQuiz } from "@/lib/storage";
-import { LocalSavedQuiz } from "@/lib/types";
+
+interface QuizDisplayItem {
+  id: string;
+  shareCode?: string;
+  title: string;
+  description?: string | null;
+  totalQuestions: number;
+  playCount?: number;
+  isPublic?: boolean;
+  createdAt: string;
+  source: "account" | "local";
+}
 
 export default function HomePage() {
   const router = useRouter();
   const [shareCodeInput, setShareCodeInput] = useState("");
-  const [localQuizzes, setLocalQuizzes] = useState<LocalSavedQuiz[]>([]);
+  const [userQuizzes, setUserQuizzes] = useState<QuizDisplayItem[]>([]);
   const [isLoadingQuizzes, setIsLoadingQuizzes] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  // Xóa đề thi cục bộ trên máy và đồng bộ lên server nếu có quyền
-  const handleDeleteLocal = async (quiz: LocalSavedQuiz) => {
-    if (!window.confirm(`Bạn có chắc chắn muốn xóa bộ đề "${quiz.title}" khỏi máy này không?`)) {
-      return;
-    }
-
+  // Tải danh sách đề thi: Gọi trực tiếp /api/quizzes/my để xác định trạng thái trong 1 request duy nhất (giảm 50% thời gian chờ)
+  const loadQuizzes = async () => {
+    setIsLoadingQuizzes(true);
     try {
-      if (quiz.shareCode) {
-        // Cố gắng gọi server xóa nếu user đang đăng nhập và có quyền
-        await fetch(`/api/quizzes/${quiz.shareCode}`, { method: "DELETE" }).catch(() => {});
+      const myRes = await fetch("/api/quizzes/my");
+      if (myRes.ok) {
+        const myData = await myRes.json();
+        setIsLoggedIn(true);
+        const formatted: QuizDisplayItem[] = (myData.quizzes || []).map((q: any) => ({
+          id: q.id,
+          shareCode: q.shareCode,
+          title: q.title,
+          description: q.description,
+          totalQuestions: q.totalQuestions,
+          playCount: q.playCount,
+          isPublic: q.isPublic ?? true,
+          createdAt: q.createdAt,
+          source: "account",
+        }));
+        setUserQuizzes(formatted);
+        setIsLoadingQuizzes(false);
+        return;
       }
-      await deleteLocalQuiz(quiz.id);
-      setLocalQuizzes((prev) => prev.filter((q) => q.id !== quiz.id));
+
+      // Người dùng chưa đăng nhập (401): Lấy từ IndexedDB
+      setIsLoggedIn(false);
+      const localData = await getAllLocalQuizzes();
+      const formattedLocal: QuizDisplayItem[] = localData.map((q) => ({
+        id: q.id,
+        shareCode: q.shareCode,
+        title: q.title,
+        description: q.description,
+        totalQuestions: q.totalQuestions,
+        isPublic: q.isPublic ?? true,
+        createdAt: q.createdAt,
+        source: "local",
+      }));
+      setUserQuizzes(formattedLocal);
     } catch (err) {
-      console.error("Lỗi khi xóa đề:", err);
+      console.error("Lỗi khi tải danh sách đề thi:", err);
+      const localData = await getAllLocalQuizzes().catch(() => []);
+      setUserQuizzes(
+        localData.map((q) => ({
+          id: q.id,
+          shareCode: q.shareCode,
+          title: q.title,
+          description: q.description,
+          totalQuestions: q.totalQuestions,
+          isPublic: q.isPublic ?? true,
+          createdAt: q.createdAt,
+          source: "local",
+        }))
+      );
+    } finally {
+      setIsLoadingQuizzes(false);
     }
   };
 
   useEffect(() => {
-    getAllLocalQuizzes()
-      .then((data) => {
-        setLocalQuizzes(data);
-        setIsLoadingQuizzes(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setIsLoadingQuizzes(false);
-      });
+    loadQuizzes();
   }, []);
+
+  // Xóa đề thi
+  const handleDeleteQuiz = async (quiz: QuizDisplayItem) => {
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa bộ đề "${quiz.title}" không?`)) {
+      return;
+    }
+
+    try {
+      if (quiz.source === "account") {
+        await fetch(`/api/quizzes/my?id=${quiz.id}`, { method: "DELETE" });
+      } else {
+        if (quiz.shareCode) {
+          await fetch(`/api/quizzes/${quiz.shareCode}`, { method: "DELETE" }).catch(() => {});
+        }
+        await deleteLocalQuiz(quiz.id);
+      }
+      setUserQuizzes((prev) => prev.filter((q) => q.id !== quiz.id));
+    } catch (err) {
+      console.error("Lỗi khi xóa đề:", err);
+      alert("Không thể xóa bộ đề này.");
+    }
+  };
+
+  // Gạt chuyển nhanh trạng thái Công khai / Riêng tư ngay trên thẻ Card
+  const handleTogglePublic = async (quiz: QuizDisplayItem) => {
+    const newStatus = !quiz.isPublic;
+    setTogglingId(quiz.id);
+
+    // Cập nhật giao diện tức thì (Optimistic UI)
+    setUserQuizzes((prev) =>
+      prev.map((q) => (q.id === quiz.id ? { ...q, isPublic: newStatus } : q))
+    );
+
+    try {
+      const codeToCall = quiz.shareCode || quiz.id;
+      const res = await fetch(`/api/quizzes/${codeToCall}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPublic: newStatus }),
+      });
+
+      if (!res.ok) {
+        // Rollback nếu có lỗi
+        setUserQuizzes((prev) =>
+          prev.map((q) => (q.id === quiz.id ? { ...q, isPublic: !newStatus } : q))
+        );
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || "Không thể cập nhật trạng thái");
+      }
+    } catch (err) {
+      console.error("Lỗi khi chuyển trạng thái đề:", err);
+      setUserQuizzes((prev) =>
+        prev.map((q) => (q.id === quiz.id ? { ...q, isPublic: !newStatus } : q))
+      );
+    } finally {
+      setTogglingId(null);
+    }
+  };
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +171,7 @@ export default function HomePage() {
       <section className="text-center space-y-5 max-w-2xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 text-xs font-bold tracking-wide">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Trắc nghiệm tức thì & Tối ưu cho Vercel</span>
+          <span>Trắc nghiệm tức thì & Kho đề chia sẻ cộng đồng</span>
         </div>
 
         <h1 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
@@ -66,21 +182,24 @@ export default function HomePage() {
         </h1>
 
         <p className="text-sm sm:text-base text-slate-600 dark:text-slate-300 max-w-xl mx-auto">
-          Tải lên file Excel/CSV hoặc dán đề văn bản. Tự động xáo trộn ngẫu nhiên câu hỏi & đáp án, chấm điểm ngay lập tức và ôn lại riêng những câu sai.
+          Tải lên file Excel/CSV hoặc dán đề văn bản. Tự động xáo trộn ngẫu nhiên câu hỏi & đáp án, chấm điểm ngay lập tức và chia sẻ đề thi cho cộng đồng.
         </p>
 
-        {/* Khung nhập mã đề & Nút Tạo mới */}
+        {/* Khung nhập mã đề & Nút Tạo mới & Xem Kho Đề */}
         <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto">
-          <form onSubmit={handleJoin} className="relative w-full">
+          <form onSubmit={handleJoin} suppressHydrationWarning className="relative w-full">
             <input
               type="text"
               placeholder="Nhập mã đề (VD: DEMO101)..."
               value={shareCodeInput}
               onChange={(e) => setShareCodeInput(e.target.value)}
+              suppressHydrationWarning
               className="w-full text-xs font-mono uppercase bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl pl-4 pr-10 py-3 text-slate-800 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
             />
             <button
               type="submit"
+              aria-label="Vào làm bài"
+              suppressHydrationWarning
               className="absolute right-2 top-2 p-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-colors"
             >
               <ArrowRight className="w-4 h-4" />
@@ -111,36 +230,93 @@ export default function HomePage() {
             Trải nghiệm tính năng xáo trộn câu hỏi, đảo đáp án và instant feedback.
           </p>
         </div>
-        <Link
-          href="/quiz/DEMO101"
-          className="shrink-0 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition-all hover:scale-105 flex items-center gap-1.5"
-        >
-          <span>Làm Thử Ngay</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/community"
+            className="px-3.5 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition-all flex items-center gap-1.5"
+          >
+            <Globe className="w-3.5 h-3.5 text-emerald-500" />
+            <span>Kho Đề Thi</span>
+          </Link>
+          <Link
+            href="/quiz/DEMO101"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition-all hover:scale-105 flex items-center gap-1.5"
+          >
+            <span>Làm Thử Ngay</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </section>
 
-      {/* Danh sách đề thi đã tạo trên máy này (IndexedDB) */}
+      {/* Danh sách Đề Thi Của Bạn */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-200/80 dark:border-slate-800">
           <div className="flex items-center gap-2">
             <BookOpen className="w-5 h-5 text-blue-600" />
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-              Đề Thi Của Bạn Trên Máy Này
+              Đề thi của bạn
             </h2>
           </div>
-          <span className="text-xs text-slate-500">Lưu trữ cục bộ an toàn</span>
+
+          <div className="flex items-center gap-3 text-xs">
+            {isLoadingQuizzes ? (
+              // Giữ chỗ trong suốt để không bị giật giao diện hay chớp text
+              <div className="h-4 w-36 opacity-0 pointer-events-none" />
+            ) : isLoggedIn ? (
+              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-medium animate-fadeIn">
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>Đồng bộ theo tài khoản</span>
+                <Link href="/my-quizzes" className="text-blue-600 hover:underline ml-1">
+                  (Quản lý tất cả)
+                </Link>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-slate-500 animate-fadeIn">
+                <span>Lưu tạm trên máy.</span>
+                <Link
+                  href="/login"
+                  className="text-blue-600 dark:text-blue-400 font-bold hover:underline flex items-center gap-1"
+                >
+                  <LogIn className="w-3 h-3" />
+                  <span>Đăng nhập để lưu vĩnh viễn</span>
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
 
         {isLoadingQuizzes ? (
-          <div className="text-center py-8 text-xs text-slate-400">Đang tải danh sách đề...</div>
-        ) : localQuizzes.length === 0 ? (
+          /* Skeleton Loading Cards giữ đúng bố cục không bị giật màn hình */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3].map((n) => (
+              <div
+                key={n}
+                className="bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 animate-pulse shadow-sm"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="h-5 w-24 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                  <div className="h-3 w-16 bg-slate-200 dark:bg-slate-800 rounded" />
+                </div>
+                <div className="space-y-2">
+                  <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded" />
+                  <div className="h-3 w-1/2 bg-slate-100 dark:bg-slate-800/60 rounded" />
+                </div>
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                  <div className="h-3 w-14 bg-slate-200 dark:bg-slate-800 rounded" />
+                  <div className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : userQuizzes.length === 0 ? (
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center space-y-3">
             <div className="w-12 h-12 mx-auto rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center">
               <BookOpen className="w-6 h-6" />
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Bạn chưa tạo bộ đề nào trên trình duyệt này.
+              {isLoggedIn
+                ? "Bạn chưa tạo bộ đề nào trên tài khoản này."
+                : "Bạn chưa tạo bộ đề nào trên trình duyệt này."}
             </p>
             <Link
               href="/create"
@@ -152,16 +328,47 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {localQuizzes.map((quiz) => (
+            {userQuizzes.map((quiz) => (
               <div
                 key={quiz.id}
                 className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 group"
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-                    <span className="font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
-                      {quiz.shareCode || "LOCAL"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
+                        {quiz.shareCode || "LOCAL"}
+                      </span>
+
+                      {/* Thanh gạt Public / Private ngay trên Card */}
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={quiz.isPublic}
+                        disabled={togglingId === quiz.id}
+                        onClick={() => handleTogglePublic(quiz)}
+                        className={`relative inline-flex items-center h-6 rounded-full pl-1.5 pr-2.5 gap-1.5 text-[10px] font-bold border transition-all cursor-pointer shadow-2xs hover:scale-102 ${
+                          quiz.isPublic
+                            ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100"
+                            : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
+                        }`}
+                        title={`Nhấp để gạt sang ${quiz.isPublic ? "Riêng tư" : "Công khai"}`}
+                      >
+                        {/* Thanh trượt slider mini chuẩn */}
+                        <div
+                          className={`w-8 h-4.5 rounded-full transition-colors flex items-center p-0.5 ${
+                            quiz.isPublic ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                          }`}
+                        >
+                          <div
+                            className={`w-3.5 h-3.5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                              quiz.isPublic ? "translate-x-3.5" : "translate-x-0"
+                            }`}
+                          />
+                        </div>
+                        <span>{quiz.isPublic ? "Công khai" : "Riêng tư"}</span>
+                      </button>
+                    </div>
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {new Date(quiz.createdAt).toLocaleDateString("vi-VN")}
@@ -184,7 +391,7 @@ export default function HomePage() {
                   <div className="flex items-center gap-1.5">
                     <button
                       type="button"
-                      onClick={() => handleDeleteLocal(quiz)}
+                      onClick={() => handleDeleteQuiz(quiz)}
                       className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                       title="Xóa bộ đề này"
                     >

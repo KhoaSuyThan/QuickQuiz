@@ -25,6 +25,7 @@ export async function GET() {
         totalQuestions: true,
         playCount: true,
         editPasscode: true,
+        isPublic: true,
         createdAt: true,
       } as any,
     });

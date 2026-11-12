@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS quizzes (
     total_questions INT NOT NULL DEFAULT 0,
     play_count INT NOT NULL DEFAULT 0,
     edit_passcode VARCHAR(50), -- Mã PIN bảo vệ quyền chỉnh sửa bộ đề
+    is_public BOOLEAN NOT NULL DEFAULT TRUE, -- Trạng thái công khai (Public) hoặc riêng tư (Private)
     user_id UUID REFERENCES users(id) ON DELETE SET NULL, -- Liên kết tài khoản người tạo
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -28,10 +29,12 @@ CREATE TABLE IF NOT EXISTS quizzes (
 -- Hỗ trợ migration nếu bảng đã tồn tại
 ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS edit_passcode VARCHAR(50);
 ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE quizzes ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT TRUE;
 
--- Chỉ mục tìm kiếm nhanh theo mã chia sẻ và người tạo
+-- Chỉ mục tìm kiếm nhanh theo mã chia sẻ, người tạo và trạng thái công khai
 CREATE INDEX IF NOT EXISTS idx_quizzes_share_code ON quizzes(share_code);
 CREATE INDEX IF NOT EXISTS idx_quizzes_user_id ON quizzes(user_id);
+CREATE INDEX IF NOT EXISTS idx_quizzes_is_public ON quizzes(is_public);
 
 -- Bảng lưu trữ danh sách câu hỏi và các lựa chọn
 CREATE TABLE IF NOT EXISTS questions (

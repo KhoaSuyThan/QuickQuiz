@@ -18,7 +18,8 @@ import {
   CheckCircle2,
   AlertTriangle,
   Eye,
-  EyeOff
+  EyeOff,
+  Globe
 } from "lucide-react";
 
 interface UserProfile {
@@ -172,6 +173,18 @@ export default function Navbar() {
 
           {/* Navigation Links & User Menu */}
           <nav className="flex items-center gap-1.5 sm:gap-2">
+            <Link
+              href="/community"
+              className={`flex items-center gap-1.5 text-xs sm:text-sm font-semibold px-2.5 sm:px-3 py-2 rounded-xl transition-colors ${
+                pathname === "/community"
+                  ? "bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 font-bold"
+                  : "text-slate-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
+            >
+              <Globe className="w-4 h-4 text-emerald-500" />
+              <span>Kho Đề Thi</span>
+            </Link>
+
             <Link
               href="/create"
               className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-3.5 py-2 rounded-xl shadow-sm shadow-blue-600/30 transition-all hover:shadow-md"
