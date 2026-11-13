@@ -5,6 +5,96 @@ Tất cả các thay đổi đáng chú ý của dự án FastQuiz sẽ được
 
 Phiên bản mới nhất sẽ luôn được cập nhật tự động lên đầu file.
 ---
+## [1.6.6] - 2026-11-13
+
+### Sửa Triệt Để Lỗi Nút Mở Khóa Sửa Đề & Hỗ Trợ Nhập PIN Cho Cả Đề Con Lẫn Đề Lẻ
+- **Khắc phục lỗi Modal PIN không hiển thị khi bấm nút ([components/QuizRunner.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/components/QuizRunner.tsx)):**
+  - Trước đó, đoạn render Modal PIN qua `createPortal` bị đặt sai vị trí bên dưới nhánh `if (!isQuizStarted) return (...)`, khiến người dùng bấm vào nút "Mở khóa sửa đề" ở màn hình bắt đầu làm bài không có bất kỳ phản hồi nào.
+  - Đã tái cấu trúc biến `pinModalElement` dùng chung và render bao bọc ở tất cả các trạng thái: màn hình chuẩn bị làm bài (`!isQuizStarted`), màn hình tổng kết (`isCompleted`), và màn hình làm bài trực tiếp. Bấm vào nút "Mở khóa sửa đề" hiện modal nhập PIN tức thì.
+- **Hỗ trợ mở khóa sửa đề trực tiếp cho cả Đề nhỏ bên trong Bộ Đề:**
+  - Không bắt người dùng phải quay ra trang bộ đề bên ngoài mới được nhập mã PIN. Ngay tại màn hình đề con (như `DATASYST`), người dùng có thể bấm nút **"Mở khóa sửa đề"** và nhập mã PIN của đề thi hoặc mã PIN của Bộ đề tổng hợp (`TECH123`).
+  - Khi mở khóa thành công, hệ thống lưu tự động vào cả mã PIN của đề và mã PIN của bộ đề cha (`collection_pin_*`), chuyển trạng thái `isOwner: true` và hiện ngay nút **"Sửa đề"** để vào trang chỉnh sửa.
+
+## [1.6.5] - 2026-11-13
+
+### Chuẩn Hóa Cơ Chế Sửa Bộ Đề & Đề Thi Đơn Lẻ Theo Mô Hình Phân Quyền
+- **Kế thừa quyền sửa từ Bộ Đề Tổng Hợp sang tất cả đề con ([components/QuizRunner.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/components/QuizRunner.tsx), [app/api/quizzes/[code]/route.ts](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/api/quizzes/[code]/route.ts)):**
+  - **Không hiển thị nút nhập PIN riêng lẻ cho đề con:** Các đề thi nhỏ nằm trong Bộ đề tổng hợp sẽ ẩn hoàn toàn nút "Mở khóa sửa đề" riêng lẻ. Thay vào đó, đề con hiển thị liên kết dẫn về Bộ đề cha.
+  - **Mã PIN vạn năng của Bộ đề:** Người dùng chỉ cần nhập mã PIN một lần duy nhất tại trang Bộ đề tổng hợp (`/collection/[code]`), hệ thống sẽ tự động cấp quyền sở hữu và kích hoạt nút **"Sửa đề"** cho tất cả các đề con bên trong.
+  - **Kế thừa quyền trong trang chỉnh sửa:** Trang chỉnh sửa [app/quiz/[code]/edit/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/quiz/[code]/edit/page.tsx) và [components/QuizEditor.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/components/QuizEditor.tsx) tự động nạp mã PIN đã lưu của Bộ đề cha để cho phép lưu thay đổi mà không bị chặn quyền.
+- **Đề thi đơn lẻ độc lập luôn hiển thị nút mở khóa PIN:**
+  - Đối với các đề thi đơn lẻ không thuộc bộ đề nào (như `QZQ8VJ`), hệ thống luôn hiển thị nút **"Mở khóa sửa đề"** ở màn hình làm bài để bất kỳ ai có mã PIN tác giả đều có thể chủ động nhập mã và chỉnh sửa đề.
+
+## [1.6.4] - 2026-11-13
+
+### Tối Ưu Phân Quyền Sửa Đề & Hoàn Thiện Trải Nghiệm Giao Diện
+- **Phân quyền nút Sửa đề tại màn hình làm bài ([components/QuizRunner.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/components/QuizRunner.tsx)):**
+  - Người dùng không phải là chủ sở hữu đề thi sẽ bị ẩn hoàn toàn nút **"Sửa đề"**.
+  - Nếu đề có cài đặt mã PIN bảo vệ, hệ thống hiển thị nút **"Mở khóa sửa đề"**. Chỉ khi người dùng nhập chính xác mã PIN qua hộp thoại xác thực thì nút **"Sửa đề"** mới được hiển thị.
+- **Khắc phục triệt để lỗi "Làm mờ 1 ô vuông" của Modal Nhập PIN:**
+  - Áp dụng kỹ thuật `createPortal` đưa toàn bộ Modal PIN ra trực tiếp `document.body` ở cả [app/collection/[code]/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/collection/[code]/page.tsx) và [components/QuizRunner.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/components/QuizRunner.tsx).
+  - Loại bỏ thuộc tính `transform/animate-pop` trên thẻ wrapper cha, giúp lớp nền mờ (`backdrop-blur-md`) che phủ trọn vẹn 100vw x 100vh toàn bộ cửa sổ trình duyệt, không còn bị co cụm thành khối ô vuông giữa màn hình kể cả khi zoom tỷ lệ hiển thị.
+- **Tóm gọn chiều cao thanh chứa "Bộ Đề Tổng Hợp":**
+  - Giảm padding từ `p-6 sm:p-10` xuống `p-5 sm:p-6`, giảm khoảng cách `space-y-6` xuống `space-y-3`.
+  - Tinh chỉnh cỡ chữ tiêu đề và đưa nút chia sẻ cùng hàng với nhãn định danh bộ đề; các thông số tác giả, tổng câu hỏi, lượt làm bài được bố trí gọn gàng, giúp chiều cao của banner giảm gần một nửa và giao diện thanh thoát hơn.
+
+## [1.6.3] - 2026-11-13
+
+### Hỗ Trợ Tạo Bộ Đề Tổng Hợp & Dọn Dẹp Trang Lịch Sử Làm Bài
+- **Tính năng Tạo Bộ Đề Tổng Hợp trực tiếp tại trang Tạo Mới ([app/create/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/create/page.tsx)):**
+  - Bổ sung thanh chuyển đổi linh hoạt: **"Đề Thi Đơn Lẻ"** (nhập câu hỏi trắc nghiệm) và **"Bộ Đề Tổng Hợp"** ([components/CreateContainer.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/components/CreateContainer.tsx)).
+  - Xây dựng form tạo bộ đề [components/CreateCollectionForm.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/components/CreateCollectionForm.tsx): Nhập tên bộ đề lớn, mô tả, bật/tắt công khai, mã PIN quản trị và hỗ trợ danh sách checkbox tích chọn các đề thi sẵn có của tài khoản để gộp vào bộ đề.
+  - Hỗ trợ tham số `collectionId` khi tạo đề thi đơn lẻ qua API [app/api/quizzes/route.ts](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/api/quizzes/route.ts) và component [components/Uploader.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/components/Uploader.tsx).
+- **Dọn dẹp trang Lịch Sử Làm Bài ([app/history/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/history/page.tsx)):**
+  - Loại bỏ hoàn toàn khối chức năng cũ *"Danh sách bộ đề bạn đã lưu trên máy (IndexedDB)"*, chuyển trang Lịch sử về chức năng chuyên biệt thuần túy: Theo dõi kết quả làm bài và ôn tập các câu sai.
+- **Sửa triệt để 9 lỗi đỏ TypeScript:**
+  - Khắc phục toàn bộ 9 lỗi `ts(2339)` và `ts(7006)` trong [app/api/collections/[code]/route.ts](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/api/collections/[code]/route.ts) và [app/api/collections/route.ts](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/api/collections/route.ts) bằng việc ép kiểu Prisma model và khai báo kiểu dữ liệu tường minh.
+
+## [1.6.2] - 2026-11-13
+
+### Nâng Cấp Thiết Kế Giao Diện Modal Nhập Mã PIN Quản Trị (UI/UX Redesign)
+- **Thiết kế lại toàn diện Modal Nhập Mã PIN ([app/collection/[code]/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/collection/[code]/page.tsx)):**
+  - Nâng cấp phong cách hiện đại với hiệu ứng làm mờ nền sâu (`backdrop-blur-md`), bóng đổ tím `shadow-2xl shadow-purple-950/30`, bo góc 3D mềm mại `rounded-3xl` và hoạt ảnh `animate-pop`.
+  - Icon chìa khóa bảo mật `KeyRound` tỏa sáng 3D nổi bật với nền gradient purple-to-indigo.
+  - Bổ sung nút đóng nhanh `X` tròn ở góc trên bên phải.
+  - Bổ sung huy hiệu (Badge) thông tin nhận diện bộ đề đang mở khóa: `Bộ đề: TECHBUNDLE`.
+  - Nâng cấp ô nhập PIN với icon ổ khóa chìm, font monospace in hoa `uppercase`, cỡ chữ lớn `tracking-widest` và viền tím focus sang trọng.
+  - Bổ sung thông báo lỗi sinh động với icon `AlertCircle` khi nhập sai PIN.
+  - Cải tiến nút hành động: Nút "Hủy bỏ" mềm mại và nút "Mở Khóa Quản Trị" dải màu gradient sắc sảo với hiệu ứng micro-interaction (hover nâng nhẹ, trạng thái xoay loading khi đang xác thực).
+  - Bổ sung huy hiệu màu xanh ngọc xác nhận `Đã mở khóa quyền Quản Trị` khi đã là tác giả hoặc mở khóa thành công.
+
+## [1.6.1] - 2026-11-13
+
+### Phân Quyền & Bảo Vệ Quyền Tác Giả Đề Thi (Authorization & Access Control)
+- **Thắt chặt quyền chỉnh sửa bộ đề và đề con:**
+  - Ẩn hoàn toàn nút **"Tạo Thêm Đề Mới"** và nút **"Sửa Đề"** trong trang chi tiết Bộ đề tổng hợp ([app/collection/[code]/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/collection/[code]/page.tsx)) đối với người dùng không phải là tác giả hoặc quản trị viên; người xem chỉ thấy danh sách đề nhỏ và nút **"Làm Bài"**.
+  - Tối ưu câu chỉ dẫn giao diện: Tự động chuyển đổi thông điệp phù hợp giữa tác giả ("Bạn có thể chọn từng đề nhỏ để làm bài luyện tập hoặc chỉnh sửa...") và học viên ("Chọn một đề thi nhỏ bên dưới để bắt đầu làm bài luyện tập.").
+  - Thắt chặt điều kiện `isOwner` và `canEdit` tại API [app/api/collections/[code]/route.ts](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/api/collections/[code]/route.ts) và [app/api/quizzes/[code]/route.ts](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/api/quizzes/[code]/route.ts): Bộ đề đã thuộc về một tài khoản thì người dùng khác tuyệt đối không được cấp quyền `isOwner` khi không có mã PIN hợp lệ.
+  - Chặn truy cập trái phép tại trang chỉnh sửa đề thi [app/quiz/[code]/edit/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/quiz/[code]/edit/page.tsx): Nếu người dùng lạ gõ URL trực tiếp vào đề của người khác mà không có quyền và không có PIN, hệ thống sẽ chặn hiển thị trình chỉnh sửa và báo lỗi rõ ràng.
+
+## [1.6.0] - 2026-11-13
+
+### Tính Năng Bộ Đề Tổng Hợp (Quiz Collections) & Bộ Lọc Loại Đề Thi
+- **Cơ sở dữ liệu (Database Schema & Seeding):**
+  - Thêm mô hình và bảng `quiz_collections` (`id`, `share_code`, `title`, `description`, `cover_image`, `edit_passcode`, `is_public`, `user_id`, `created_at`, `updated_at`).
+  - Bổ sung cột khóa ngoại `collection_id` vào bảng `quizzes` liên kết với `quiz_collections(id) ON DELETE SET NULL` trong [prisma/schema.prisma](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/prisma/schema.prisma) và [database/schema.sql](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/database/schema.sql).
+  - Bổ sung dữ liệu khởi tạo mẫu bộ đề tổng hợp công nghệ `TECHBUNDLE` chứa 2 đề nhỏ trong [database/seed.ts](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/database/seed.ts).
+  - Đồng bộ thành công cấu trúc schema lên cơ sở dữ liệu đám mây Neon PostgreSQL qua `prisma db push`.
+
+- **API Backend:**
+  - Xây dựng API route mới `POST /api/collections` tạo bộ đề tổng hợp.
+  - Xây dựng API route mới `GET /api/collections/[code]`, `PUT`, `DELETE` cho phép xem chi tiết, thống kê tổng câu hỏi, quản lý quyền bảo mật qua mã PIN và chỉnh sửa bộ đề lớn.
+  - Nâng cấp API `GET /api/quizzes/community` hỗ trợ tham số lọc `type` (`all`, `collection`, `single`), đồng thời trả về số lượng đề thi nhỏ (`subQuizCount`) và tổng câu hỏi cho bộ đề lớn.
+
+- **Giao diện Người dùng (Frontend UI/UX):**
+  - Cập nhật trang [app/community/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/community/page.tsx): Thêm dropdown chọn loại đề thi ("Tất cả đề thi", "📚 Bộ đề tổng hợp", "📝 Đề thi đơn lẻ") ngay cạnh thanh tìm kiếm; hiển thị thẻ card riêng biệt với huy hiệu `Bộ tổng hợp` và nút `Xem Bộ Đề`.
+  - Xây dựng trang chi tiết bộ đề [app/collection/[code]/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/collection/[code]/page.tsx): Hiển thị đầy đủ thông tin bộ đề lớn, tổng số câu hỏi, lượt làm bài, danh sách toàn bộ các đề thi nhỏ bên trong kèm nút `Làm Bài` và nút `Sửa Đề` (cho phép chỉnh sửa độc lập từng đề con).
+  - Tối ưu trang **Bộ Đề Của Tôi** ([app/my-quizzes/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/my-quizzes/page.tsx)) và **Trang chủ** ([app/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/page.tsx)): Tự động gom các đề con đã thuộc Bộ đề lớn lại và chỉ hiển thị 1 thẻ duy nhất đại diện cho Bộ đề tổng hợp (kèm huy hiệu `Bộ tổng hợp`, số lượng đề con & tổng câu hỏi); loại bỏ việc hiển thị dàn trải các đề con ra ngoài danh sách chính.
+  - Bổ sung nút **Xóa đề thi nhỏ (Trash Icon)** ngay trên từng thẻ đề con trong trang chi tiết Bộ đề tổng hợp ([app/collection/[code]/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/collection/[code]/page.tsx)): Cho phép tác giả hoặc người quản trị xóa đề thi nhỏ độc lập với hộp thoại xác nhận an toàn và cập nhật tức thì số lượng đề con / tổng câu hỏi.
+  - **Khắc phục lỗi (Bug Fixes):**
+    - Sửa 8 cảnh báo/lỗi kiểu TypeScript trong [app/api/quizzes/my/route.ts](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/api/quizzes/my/route.ts) liên quan đến định kiểu callback và `quizCollection`.
+    - Khắc phục lỗi `Internal Server Error (500)` khi mở trang [app/collection/[code]/page.tsx](file:///c:/Users/aaa/Pictures/SaveCode/QuickQuiz/app/collection/[code]/page.tsx) bằng cách chuyển cơ chế đọc tham số URL sang `useParams()` chuẩn của Next.js App Router.
+
 ## [1.5.0] - 2026-11-12
 
 ### Kho Đề Thi Cộng Đồng & Chặn Trùng Lặp Đáp Án

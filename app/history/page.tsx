@@ -9,7 +9,6 @@ import QuizRunner from "@/components/QuizRunner";
 
 export default function HistoryPage() {
   const [attempts, setAttempts] = useState<QuizAttemptRecord[]>([]);
-  const [myQuizzes, setMyQuizzes] = useState<LocalSavedQuiz[]>([]);
   const [loading, setLoading] = useState(true);
 
   // State nếu người dùng chọn "Làm lại riêng câu sai" trực tiếp từ trang Lịch sử
@@ -18,12 +17,8 @@ export default function HistoryPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [attList, qList] = await Promise.all([
-          getAllAttempts(),
-          getAllLocalQuizzes(),
-        ]);
+        const attList = await getAllAttempts();
         setAttempts(attList);
-        setMyQuizzes(qList);
       } catch (err) {
         console.error("Lỗi khi tải lịch sử:", err);
       } finally {
@@ -60,17 +55,17 @@ export default function HistoryPage() {
       <div>
         <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
           <History className="w-7 h-7 text-blue-600" />
-          <span>Lịch Sử Làm Bài & Bộ Đề Của Bạn</span>
+          <span>Lịch Sử Làm Bài</span>
         </h1>
         <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-          Dữ liệu được lưu trữ trực tiếp và bảo mật trong trình duyệt của bạn (IndexedDB).
+          Xem lại kết quả các lần làm bài thi trắc nghiệm và ôn luyện riêng các câu đã làm sai.
         </p>
       </div>
 
       {/* Danh sách các lần thi đã làm */}
       <section className="space-y-4">
         <h2 className="text-base font-bold text-slate-900 dark:text-white">
-          Lịch sử các lần làm bài ({attempts.length})
+          Danh sách các lần làm bài ({attempts.length})
         </h2>
 
         {loading ? (
@@ -142,51 +137,6 @@ export default function HistoryPage() {
                       <span>Làm lại</span>
                     </Link>
                   </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Danh sách các đề đã tạo trên máy */}
-      <section className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
-        <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <BookOpen className="w-4 h-4 text-blue-600" />
-          <span>Danh sách bộ đề bạn đã lưu trên máy ({myQuizzes.length})</span>
-        </h2>
-
-        {myQuizzes.length === 0 ? (
-          <p className="text-xs text-slate-500">Chưa có bộ đề nào được lưu trên máy.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {myQuizzes.map((q) => (
-              <div
-                key={q.id}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-between text-xs"
-              >
-                <div>
-                  <h4 className="font-bold text-slate-800 dark:text-slate-200">{q.title}</h4>
-                  <span className="text-[11px] text-slate-400">
-                    Mã: {q.shareCode} • {q.totalQuestions} câu hỏi
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Link
-                    href={`/quiz/${q.shareCode || q.id}/edit`}
-                    className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition-colors flex items-center gap-1 font-semibold"
-                    title="Chỉnh sửa câu hỏi bộ đề này"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>Sửa</span>
-                  </Link>
-                  <Link
-                    href={`/quiz/${q.shareCode || q.id}`}
-                    className="font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
-                  >
-                    <span>Mở đề</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
                 </div>
               </div>
             ))}

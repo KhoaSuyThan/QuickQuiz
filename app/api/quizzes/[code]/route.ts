@@ -26,8 +26,8 @@ export async function GET(
       );
     }
 
-    // Tìm kiếm theo shareCode hoặc theo id
-    const quiz = await prisma.quiz.findFirst({
+    // Tìm kiếm theo shareCode hoặc theo id kèm thông tin bộ đề cha nếu có
+    const quiz = await (prisma as any).quiz.findFirst({
       where: {
         OR: [
           { shareCode: cleanCode },
@@ -37,6 +37,14 @@ export async function GET(
       include: {
         questions: {
           orderBy: { orderIndex: "asc" },
+        },
+        collection: {
+          select: {
+            id: true,
+            shareCode: true,
+            editPasscode: true,
+            userId: true,
+          },
         },
       },
     });
@@ -59,18 +67,27 @@ export async function GET(
       });
     }
 
-    // Kiểm tra quyền chỉnh sửa & quyền xóa
+    // Kiểm tra quyền chỉnh sửa & quyền xóa (kế thừa từ tác giả đề hoặc tác giả bộ đề cha)
     const authUser = await getAuthUser();
     const quizObj = quiz as any;
     const incomingPasscode = req.headers.get("x-edit-passcode")?.trim().toUpperCase();
     const isAdmin = authUser?.role === "ADMIN";
-    const isAuthor = !!(authUser?.id && quizObj.userId && authUser.id === quizObj.userId);
+    const isAuthor = !!(
+      (authUser?.id && quizObj.userId && authUser.id === quizObj.userId) ||
+      (authUser?.id && quizObj.collection?.userId && authUser.id === quizObj.collection.userId)
+    );
     const canDelete = isAdmin || isAuthor;
+
+    // Khớp mã PIN của chính đề thi HOẶC khớp mã PIN của Bộ đề tổng hợp cha
+    const isPasscodeMatch = !!(
+      (incomingPasscode && quizObj.editPasscode && incomingPasscode === quizObj.editPasscode.toUpperCase()) ||
+      (incomingPasscode && quizObj.collection?.editPasscode && incomingPasscode === quizObj.collection.editPasscode.toUpperCase())
+    );
 
     const isOwner = !!(
       canDelete ||
-      (incomingPasscode && quizObj.editPasscode && incomingPasscode === quizObj.editPasscode.toUpperCase()) ||
-      !quizObj.editPasscode
+      isPasscodeMatch ||
+      (!quizObj.userId && !quizObj.editPasscode && !quizObj.collectionId)
     );
 
     return NextResponse.json({
@@ -83,7 +100,9 @@ export async function GET(
         totalQuestions: quiz.totalQuestions,
         playCount: forEdit ? quiz.playCount : quiz.playCount + 1,
         isPublic: quizObj.isPublic ?? true,
-        hasEditPasscode: !!quizObj.editPasscode,
+        collectionId: quizObj.collectionId || null,
+        collectionShareCode: quizObj.collection?.shareCode || null,
+        hasEditPasscode: !!(quizObj.editPasscode || quizObj.collection?.editPasscode),
         isOwner,
         canDelete,
         createdAt: quiz.createdAt.toISOString(),
@@ -121,13 +140,23 @@ export async function PUT(
       );
     }
 
-    // Tìm kiếm đề thi hiện tại
-    const existingQuiz = await prisma.quiz.findFirst({
+    // Tìm kiếm đề thi hiện tại kèm thông tin bộ đề cha
+    const existingQuiz = await (prisma as any).quiz.findFirst({
       where: {
         OR: [
           { shareCode: cleanCode },
           { id: code }
         ],
+      },
+      include: {
+        collection: {
+          select: {
+            id: true,
+            shareCode: true,
+            editPasscode: true,
+            userId: true,
+          },
+        },
       },
     });
 
@@ -147,23 +176,34 @@ export async function PUT(
       isPublic?: boolean;
     };
 
-    // Kiểm tra quyền chỉnh sửa: Admin hoặc chính chủ đăng nhập được miễn nhập mã PIN
+    // Kiểm tra quyền chỉnh sửa: Admin, chính chủ đề hoặc chính chủ bộ đề cha
     const authUser = await getAuthUser();
     const existingObj = existingQuiz as any;
     const isAdmin = authUser?.role === "ADMIN";
-    const isAuthor = !!(authUser?.id && existingObj.userId && authUser.id === existingObj.userId);
+    const isAuthor = !!(
+      (authUser?.id && existingObj.userId && authUser.id === existingObj.userId) ||
+      (authUser?.id && existingObj.collection?.userId && authUser.id === existingObj.collection.userId)
+    );
 
     if (!isAdmin && !isAuthor) {
       const authHeaderPasscode = req.headers.get("x-edit-passcode")?.trim().toUpperCase();
       const providedPasscode = (authHeaderPasscode || editPasscode?.trim() || "").toUpperCase();
 
-      if (existingObj.editPasscode) {
-        if (!providedPasscode || providedPasscode !== existingObj.editPasscode.toUpperCase()) {
+      // Kiểm tra PIN của đề con hoặc PIN của bộ đề cha
+      const activePasscode = existingObj.editPasscode || existingObj.collection?.editPasscode;
+
+      if (activePasscode) {
+        if (!providedPasscode || providedPasscode !== activePasscode.toUpperCase()) {
           return NextResponse.json(
             { error: "Mã PIN chỉnh sửa không chính xác. Bạn không có quyền sửa bộ đề này!" },
             { status: 403 }
           );
         }
+      } else if (existingObj.userId || existingObj.collection?.userId) {
+        return NextResponse.json(
+          { error: "Bạn không có quyền chỉnh sửa bộ đề của tác giả khác!" },
+          { status: 403 }
+        );
       }
     }
 

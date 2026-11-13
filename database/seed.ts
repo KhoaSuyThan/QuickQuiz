@@ -104,7 +104,118 @@ async function main() {
 
   console.log(`Đã khởi tạo thành công đề mẫu với mã: ${demoQuiz.shareCode}`);
 
-  // 3. Gán tất cả đề đã tạo trước khi có Auth (userId == null) về cho Admin
+  // 3. Tạo Bộ đề tổng hợp mẫu (QuizCollection) chứa nhiều đề thi nhỏ
+  const demoCollection = await (prisma as any).quizCollection.upsert({
+    where: { shareCode: "TECHBUNDLE" },
+    update: {
+      userId: adminUser.id,
+      editPasscode: "TECH123",
+      isPublic: true,
+    },
+    create: {
+      shareCode: "TECHBUNDLE",
+      title: "Bộ Đề Tổng Hợp: Lập Trình & Công Nghệ Thông Tin",
+      description: "Bộ đề ôn luyện toàn diện bao gồm các chuyên đề: Web Frontend, Backend và Cơ sở dữ liệu. Chia thành các đề nhỏ 5-30 câu giúp dễ dàng ôn tập.",
+      editPasscode: "TECH123",
+      isPublic: true,
+      userId: adminUser.id,
+    },
+  });
+
+  // Tạo đề nhỏ 1 thuộc bộ đề tổng hợp
+  await prisma.quiz.upsert({
+    where: { shareCode: "WEBFRONT" },
+    update: {
+      collectionId: demoCollection.id,
+      userId: adminUser.id,
+      isPublic: true,
+    } as any,
+    create: {
+      shareCode: "WEBFRONT",
+      title: "Chuyên Đề 1: Web Frontend & JavaScript",
+      description: "Trắc nghiệm các khái niệm cốt lõi về DOM, Event Loop, Closure và React.",
+      totalQuestions: 2,
+      isPublic: true,
+      collectionId: demoCollection.id,
+      userId: adminUser.id,
+      editPasscode: "TECH123",
+      questions: {
+        create: [
+          {
+            questionText: "Từ khóa nào trong JavaScript khai báo biến có phạm vi khối (block scope) và không thể gán lại giá trị?",
+            orderIndex: 1,
+            explanation: "const khai báo hằng số có block scope và không cho phép tái gán.",
+            options: [
+              { id: "1", text: "var", is_correct: false },
+              { id: "2", text: "let", is_correct: false },
+              { id: "3", text: "const", is_correct: true },
+              { id: "4", text: "static", is_correct: false },
+            ],
+          },
+          {
+            questionText: "Hook nào trong React được sử dụng để xử lý side effects như gọi API hoặc đăng ký sự kiện?",
+            orderIndex: 2,
+            explanation: "useEffect dùng để quản lý các tác vụ phụ (side effects) trong function component.",
+            options: [
+              { id: "1", text: "useState", is_correct: false },
+              { id: "2", text: "useEffect", is_correct: true },
+              { id: "3", text: "useContext", is_correct: false },
+              { id: "4", text: "useMemo", is_correct: false },
+            ],
+          },
+        ],
+      },
+    } as any,
+  });
+
+  // Tạo đề nhỏ 2 thuộc bộ đề tổng hợp
+  await prisma.quiz.upsert({
+    where: { shareCode: "DATASYST" },
+    update: {
+      collectionId: demoCollection.id,
+      userId: adminUser.id,
+      isPublic: true,
+    } as any,
+    create: {
+      shareCode: "DATASYST",
+      title: "Chuyên Đề 2: Cơ Sở Dữ Liệu & SQL",
+      description: "Trắc nghiệm kiến thức về quan hệ RDBMS, Index và tối ưu hóa truy vấn.",
+      totalQuestions: 2,
+      isPublic: true,
+      collectionId: demoCollection.id,
+      userId: adminUser.id,
+      editPasscode: "TECH123",
+      questions: {
+        create: [
+          {
+            questionText: "Trong SQL, lệnh nào được sử dụng để xóa hoàn toàn dữ liệu trong bảng mà không ghi lại từng bản ghi xóa vào log?",
+            orderIndex: 1,
+            explanation: "TRUNCATE TABLE giải phóng toàn bộ trang dữ liệu nhanh hơn DELETE.",
+            options: [
+              { id: "1", text: "DELETE", is_correct: false },
+              { id: "2", text: "DROP", is_correct: false },
+              { id: "3", text: "TRUNCATE", is_correct: true },
+              { id: "4", text: "REMOVE", is_correct: false },
+            ],
+          },
+          {
+            questionText: "Thuộc tính ACID trong hệ quản trị cơ sở dữ liệu gồm những yếu tố nào?",
+            orderIndex: 2,
+            explanation: "ACID đại diện cho: Atomicity, Consistency, Isolation, Durability.",
+            options: [
+              { id: "1", text: "Atomicity, Consistency, Isolation, Durability", is_correct: true },
+              { id: "2", text: "Accuracy, Consistency, Integrity, Durability", is_correct: false },
+              { id: "3", text: "Access, Control, Isolation, Distribution", is_correct: false },
+              { id: "4", text: "Automatic, Concurrent, Isolated, Direct", is_correct: false },
+            ],
+          },
+        ],
+      },
+    } as any,
+  });
+  console.log(`Đã khởi tạo thành công Bộ đề tổng hợp: ${demoCollection.shareCode}`);
+
+  // 4. Gán tất cả đề đã tạo trước khi có Auth (userId == null) về cho Admin
   const updatedOldQuizzes = await (prisma as any).quiz.updateMany({
     where: { userId: null },
     data: { userId: adminUser.id },

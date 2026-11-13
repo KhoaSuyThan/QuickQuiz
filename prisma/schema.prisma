@@ -15,31 +15,55 @@ model User {
   role         String   @default("USER") @db.VarChar(20) // "USER" hoặc "ADMIN"
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @default(now()) @updatedAt @map("updated_at")
-  quizzes      Quiz[]
+  quizzes         Quiz[]
+  quizCollections QuizCollection[]
 
   @@map("users")
   @@index([email])
 }
 
+model QuizCollection {
+  id           String    @id @default(uuid())
+  shareCode    String    @unique @map("share_code") @db.VarChar(10)
+  title        String    @db.VarChar(255)
+  description  String?   @db.Text
+  coverImage   String?   @map("cover_image") @db.Text
+  editPasscode String?   @map("edit_passcode") @db.VarChar(50) // Mã PIN quản lý bộ đề tổng hợp
+  isPublic     Boolean   @default(true) @map("is_public") // Công khai hoặc Riêng tư
+  userId       String?   @map("user_id") // ID tài khoản người tạo
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
+  quizzes      Quiz[]
+
+  @@map("quiz_collections")
+  @@index([shareCode])
+  @@index([userId])
+  @@index([isPublic])
+}
+
 model Quiz {
-  id             String     @id @default(uuid())
-  shareCode      String     @unique @map("share_code") @db.VarChar(10)
-  title          String     @db.VarChar(255)
-  description    String?    @db.Text
-  totalQuestions Int        @default(0) @map("total_questions")
-  playCount      Int        @default(0) @map("play_count")
-  editPasscode   String?    @map("edit_passcode") @db.VarChar(50) // Mã PIN bảo mật chỉnh sửa bộ đề
-  isPublic       Boolean    @default(true) @map("is_public") // Công khai (Public) hoặc Riêng tư (Private)
-  userId         String?    @map("user_id") // ID tài khoản người tạo (nếu có đăng nhập)
-  user           User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
-  createdAt      DateTime   @default(now()) @map("created_at")
-  updatedAt      DateTime   @default(now()) @updatedAt @map("updated_at")
+  id             String          @id @default(uuid())
+  shareCode      String          @unique @map("share_code") @db.VarChar(10)
+  title          String          @db.VarChar(255)
+  description    String?         @db.Text
+  totalQuestions Int             @default(0) @map("total_questions")
+  playCount      Int             @default(0) @map("play_count")
+  editPasscode   String?         @map("edit_passcode") @db.VarChar(50) // Mã PIN bảo mật chỉnh sửa bộ đề
+  isPublic       Boolean         @default(true) @map("is_public") // Công khai (Public) hoặc Riêng tư (Private)
+  userId         String?         @map("user_id") // ID tài khoản người tạo (nếu có đăng nhập)
+  user           User?           @relation(fields: [userId], references: [id], onDelete: SetNull)
+  collectionId   String?         @map("collection_id") // ID bộ đề tổng hợp chứa đề này (nếu có)
+  collection     QuizCollection? @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @default(now()) @updatedAt @map("updated_at")
   questions      Question[]
 
   @@map("quizzes")
   @@index([shareCode])
   @@index([userId])
   @@index([isPublic])
+  @@index([collectionId])
 }
 
 model Question {

@@ -40,10 +40,32 @@ export default function EditQuizPage({
 
       // 2. Truy vấn từ API PostgreSQL với cờ forEdit=true để không tăng playCount
       try {
-        const res = await fetch(`/api/quizzes/${cleanCode}?forEdit=true`);
-        const data = await res.json();
+        const savedQuizPin = typeof window !== "undefined" ? localStorage.getItem(`quiz_pin_${cleanCode}`) : null;
+        let headers: Record<string, string> = {};
+        if (savedQuizPin) {
+          headers["x-edit-passcode"] = savedQuizPin;
+        }
+
+        let res = await fetch(`/api/quizzes/${cleanCode}?forEdit=true`, { headers });
+        let data = await res.json();
+
+        // Nếu đề con thuộc bộ đề và chưa có quyền, thử dùng mã PIN bộ đề cha đã lưu trong máy
+        if (res.ok && data.quiz && !data.quiz.isOwner && data.quiz.collectionShareCode) {
+          const savedColPin = localStorage.getItem(`collection_pin_${data.quiz.collectionShareCode}`);
+          if (savedColPin) {
+            res = await fetch(`/api/quizzes/${cleanCode}?forEdit=true`, {
+              headers: { "x-edit-passcode": savedColPin },
+            });
+            data = await res.json();
+          }
+        }
 
         if (res.ok && data.quiz) {
+          if (!data.quiz.isOwner && !data.quiz.hasEditPasscode) {
+            setError("Bạn không có quyền chỉnh sửa bộ đề này. Chỉ tác giả tạo đề hoặc Quản trị viên mới có quyền sửa.");
+            setLoading(false);
+            return;
+          }
           setQuizData(data.quiz);
         } else {
           setError(data.error || "Không tìm thấy bộ đề trắc nghiệm này để chỉnh sửa.");

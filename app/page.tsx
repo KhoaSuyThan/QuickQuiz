@@ -15,7 +15,8 @@ import {
   Globe, 
   Lock, 
   UserCheck, 
-  LogIn 
+  LogIn,
+  Layers
 } from "lucide-react";
 import { getAllLocalQuizzes, deleteLocalQuiz } from "@/lib/storage";
 
@@ -29,6 +30,8 @@ interface QuizDisplayItem {
   isPublic?: boolean;
   createdAt: string;
   source: "account" | "local";
+  isCollection?: boolean;
+  subQuizCount?: number;
 }
 
 export default function HomePage() {
@@ -57,6 +60,8 @@ export default function HomePage() {
           isPublic: q.isPublic ?? true,
           createdAt: q.createdAt,
           source: "account",
+          isCollection: q.isCollection,
+          subQuizCount: q.subQuizCount,
         }));
         setUserQuizzes(formatted);
         setIsLoadingQuizzes(false);
@@ -109,7 +114,10 @@ export default function HomePage() {
 
     try {
       if (quiz.source === "account") {
-        await fetch(`/api/quizzes/my?id=${quiz.id}`, { method: "DELETE" });
+        const deleteUrl = quiz.isCollection
+          ? `/api/quizzes/my?id=${quiz.id}&isCollection=true`
+          : `/api/quizzes/my?id=${quiz.id}`;
+        await fetch(deleteUrl, { method: "DELETE" });
       } else {
         if (quiz.shareCode) {
           await fetch(`/api/quizzes/${quiz.shareCode}`, { method: "DELETE" }).catch(() => {});
@@ -135,8 +143,13 @@ export default function HomePage() {
 
     try {
       const codeToCall = quiz.shareCode || quiz.id;
-      const res = await fetch(`/api/quizzes/${codeToCall}`, {
-        method: "PATCH",
+      const endpoint = quiz.isCollection
+        ? `/api/collections/${codeToCall}`
+        : `/api/quizzes/${codeToCall}`;
+      const method = quiz.isCollection ? "PUT" : "PATCH";
+
+      const res = await fetch(endpoint, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ isPublic: newStatus }),
       });
@@ -328,94 +341,135 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {userQuizzes.map((quiz) => (
-              <div
-                key={quiz.id}
-                className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 group"
-              >
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
-                        {quiz.shareCode || "LOCAL"}
-                      </span>
+            {userQuizzes.map((quiz) => {
+              const isColl = quiz.isCollection;
 
-                      {/* Thanh gạt Public / Private ngay trên Card */}
+              return (
+                <div
+                  key={quiz.id}
+                  className={`bg-white dark:bg-slate-900 border rounded-2xl p-5 shadow-sm hover:shadow-md transition-all flex flex-col justify-between space-y-4 group ${
+                    isColl
+                      ? "border-purple-200 dark:border-purple-900/60 hover:border-purple-400 dark:hover:border-purple-700 bg-gradient-to-b from-purple-50/20 to-transparent dark:from-purple-950/10"
+                      : "border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-900"
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-[11px] font-mono text-slate-400">
+                      <div className="flex items-center gap-2">
+                        {isColl ? (
+                          <span className="inline-flex items-center gap-1 font-bold text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/80 px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">
+                            <Layers className="w-3 h-3" />
+                            <span>Bộ tổng hợp</span>
+                          </span>
+                        ) : (
+                          <span className="font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded">
+                            {quiz.shareCode || "LOCAL"}
+                          </span>
+                        )}
+
+                        {/* Thanh gạt Public / Private ngay trên Card */}
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={quiz.isPublic}
+                          disabled={togglingId === quiz.id}
+                          onClick={() => handleTogglePublic(quiz)}
+                          className={`relative inline-flex items-center h-6 rounded-full pl-1.5 pr-2.5 gap-1.5 text-[10px] font-bold border transition-all cursor-pointer shadow-2xs hover:scale-102 ${
+                            quiz.isPublic
+                              ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100"
+                              : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
+                          }`}
+                          title={`Nhấp để gạt sang ${quiz.isPublic ? "Riêng tư" : "Công khai"}`}
+                        >
+                          {/* Thanh trượt slider mini chuẩn */}
+                          <div
+                            className={`w-8 h-4.5 rounded-full transition-colors flex items-center p-0.5 ${
+                              quiz.isPublic ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
+                            }`}
+                          >
+                            <div
+                              className={`w-3.5 h-3.5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
+                                quiz.isPublic ? "translate-x-3.5" : "translate-x-0"
+                              }`}
+                            />
+                          </div>
+                          <span>{quiz.isPublic ? "Công khai" : "Riêng tư"}</span>
+                        </button>
+                      </div>
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {new Date(quiz.createdAt).toLocaleDateString("vi-VN")}
+                      </span>
+                    </div>
+
+                    <h3 className={`text-sm font-bold line-clamp-2 transition-colors ${
+                      isColl
+                        ? "text-slate-900 dark:text-white group-hover:text-purple-600"
+                        : "text-slate-900 dark:text-white group-hover:text-blue-600"
+                    }`}>
+                      {quiz.title}
+                    </h3>
+
+                    {quiz.description && (
+                      <p className="text-xs text-slate-500 line-clamp-2">
+                        {quiz.description}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
+                    <span className="text-slate-500 font-medium">
+                      {isColl ? (
+                        <span className="font-semibold text-purple-600 dark:text-purple-400">
+                          {quiz.subQuizCount || 0} đề nhỏ • {quiz.totalQuestions} câu
+                        </span>
+                      ) : (
+                        `${quiz.totalQuestions} câu hỏi`
+                      )}
+                    </span>
+
+                    <div className="flex items-center gap-1.5">
                       <button
                         type="button"
-                        role="switch"
-                        aria-checked={quiz.isPublic}
-                        disabled={togglingId === quiz.id}
-                        onClick={() => handleTogglePublic(quiz)}
-                        className={`relative inline-flex items-center h-6 rounded-full pl-1.5 pr-2.5 gap-1.5 text-[10px] font-bold border transition-all cursor-pointer shadow-2xs hover:scale-102 ${
-                          quiz.isPublic
-                            ? "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-100"
-                            : "bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
-                        }`}
-                        title={`Nhấp để gạt sang ${quiz.isPublic ? "Riêng tư" : "Công khai"}`}
+                        onClick={() => handleDeleteQuiz(quiz)}
+                        className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                        title={isColl ? "Xóa bộ đề tổng hợp này" : "Xóa bộ đề này"}
                       >
-                        {/* Thanh trượt slider mini chuẩn */}
-                        <div
-                          className={`w-8 h-4.5 rounded-full transition-colors flex items-center p-0.5 ${
-                            quiz.isPublic ? "bg-emerald-500" : "bg-slate-300 dark:bg-slate-600"
-                          }`}
-                        >
-                          <div
-                            className={`w-3.5 h-3.5 rounded-full bg-white shadow-md transform transition-transform duration-200 ${
-                              quiz.isPublic ? "translate-x-3.5" : "translate-x-0"
-                            }`}
-                          />
-                        </div>
-                        <span>{quiz.isPublic ? "Công khai" : "Riêng tư"}</span>
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
-                    </div>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {new Date(quiz.createdAt).toLocaleDateString("vi-VN")}
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-blue-600 transition-colors">
-                    {quiz.title}
-                  </h3>
-                  {quiz.description && (
-                    <p className="text-xs text-slate-500 line-clamp-2">
-                      {quiz.description}
-                    </p>
-                  )}
-                </div>
 
-                <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
-                  <span className="text-slate-500 font-medium">
-                    {quiz.totalQuestions} câu hỏi
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteQuiz(quiz)}
-                      className="text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      title="Xóa bộ đề này"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                    <Link
-                      href={`/quiz/${quiz.shareCode || quiz.id}/edit`}
-                      className="text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 font-semibold flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                      title="Chỉnh sửa câu hỏi bộ đề này"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                      <span>Sửa</span>
-                    </Link>
-                    <Link
-                      href={`/quiz/${quiz.shareCode || quiz.id}`}
-                      className="font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 pl-1"
-                    >
-                      <span>Làm bài</span>
-                      <ArrowRight className="w-3 h-3" />
-                    </Link>
+                      {isColl ? (
+                        <Link
+                          href={`/collection/${quiz.shareCode}`}
+                          className="font-bold text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 pl-1"
+                        >
+                          <span>Xem bộ đề</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      ) : (
+                        <>
+                          <Link
+                            href={`/quiz/${quiz.shareCode || quiz.id}/edit`}
+                            className="text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-400 font-semibold flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                            title="Chỉnh sửa câu hỏi bộ đề này"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                            <span>Sửa</span>
+                          </Link>
+                          <Link
+                            href={`/quiz/${quiz.shareCode || quiz.id}`}
+                            className="font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1 pl-1"
+                          >
+                            <span>Làm bài</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

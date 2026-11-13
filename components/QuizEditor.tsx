@@ -55,9 +55,26 @@ export default function QuizEditor({ initialQuiz, code }: QuizEditorProps) {
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  // Kiểm tra mã PIN bảo vệ từ IndexedDB
+  // Kiểm tra mã PIN bảo vệ từ IndexedDB hoặc localStorage
   useEffect(() => {
     async function checkLocalPasscode() {
+      // 1. Kiểm tra localStorage trước (đã mở khóa từ trang bộ đề cha hoặc đề con)
+      if (typeof window !== "undefined") {
+        const savedQuizPin = localStorage.getItem(`quiz_pin_${code}`);
+        const savedColPin = initialQuiz.collectionShareCode
+          ? localStorage.getItem(`collection_pin_${initialQuiz.collectionShareCode}`)
+          : null;
+        if (savedQuizPin) {
+          setEditPasscode(savedQuizPin);
+          return;
+        }
+        if (savedColPin) {
+          setEditPasscode(savedColPin);
+          return;
+        }
+      }
+
+      // 2. Kiểm tra trong IndexedDB
       try {
         const local = await getLocalQuizByCode(code);
         if (local && local.editPasscode) {
@@ -70,7 +87,7 @@ export default function QuizEditor({ initialQuiz, code }: QuizEditorProps) {
       }
     }
     checkLocalPasscode();
-  }, [code]);
+  }, [code, initialQuiz.collectionShareCode]);
 
   // Khi sửa văn bản ở Tab Text -> tự động parse lại danh sách câu hỏi
   const handleRawTextChange = (text: string) => {

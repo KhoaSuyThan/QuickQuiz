@@ -60,12 +60,13 @@ export async function POST(req: Request) {
     createQuizRateLimitMap.set(clientKey, userTimestamps);
 
     const body = await req.json();
-    const { title, description, questions, editPasscode: customPasscode, isPublic = true } = body as {
+    const { title, description, questions, editPasscode: customPasscode, isPublic = true, collectionId } = body as {
       title: string;
       description?: string;
       questions: QuizQuestion[];
       editPasscode?: string;
       isPublic?: boolean;
+      collectionId?: string;
     };
 
     if (!title || !questions || !Array.isArray(questions) || questions.length === 0) {
@@ -112,6 +113,7 @@ export async function POST(req: Request) {
           editPasscode,
           isPublic: isPublic !== false, // Lưu trạng thái công khai hoặc riêng tư
           userId: authUser?.id || null, // Gắn tài khoản người tạo nếu đã đăng nhập
+          collectionId: collectionId || null, // Gán vào bộ đề tổng hợp nếu có
           totalQuestions: questions.length,
           questions: {
             create: questions.map((q, idx) => ({

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { QuizQuestion, QuizData } from "@/lib/types";
@@ -22,7 +23,12 @@ import {
   VolumeX,
   Timer,
   Clock,
-  ChevronDown
+  ChevronDown,
+  KeyRound,
+  ShieldCheck,
+  Lock,
+  AlertCircle,
+  Layers
 } from "lucide-react";
 import QuizResult from "./QuizResult";
 
@@ -35,6 +41,79 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isMuted, setIsMuted] = useState(soundFx.isMuted());
+
+  // Quản lý quyền chỉnh sửa & Mở khóa bằng mã PIN
+  const [isOwner, setIsOwner] = useState<boolean>(Boolean(quizData.isOwner));
+  const [showPinModal, setShowPinModal] = useState<boolean>(false);
+  const [pinInput, setPinInput] = useState<string>("");
+  const [pinError, setPinError] = useState<string>("");
+  const [isCheckingPin, setIsCheckingPin] = useState<boolean>(false);
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+    // Tự động kiểm tra nếu đã lưu mã PIN hợp lệ cho đề lẻ HOẶC bộ đề tổng hợp cha
+    const savedQuizPin = quizData.shareCode ? localStorage.getItem(`quiz_pin_${quizData.shareCode}`) : null;
+    const savedCollectionPin = quizData.collectionShareCode
+      ? localStorage.getItem(`collection_pin_${quizData.collectionShareCode}`)
+      : null;
+    const activePin = savedQuizPin || savedCollectionPin;
+
+    if (activePin && !quizData.isOwner && quizData.shareCode) {
+      fetch(`/api/quizzes/${quizData.shareCode}?forEdit=true`, {
+        headers: { "x-edit-passcode": activePin },
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.quiz?.isOwner) {
+            setIsOwner(true);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [quizData.shareCode, quizData.isOwner, quizData.collectionShareCode]);
+
+  // Xử lý mở khóa quyền chỉnh sửa bằng mã PIN
+  const handleUnlockQuizPin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanPin = pinInput.trim().toUpperCase();
+    if (!cleanPin) {
+      setPinError("Vui lòng nhập mã PIN chỉnh sửa");
+      return;
+    }
+
+    setPinError("");
+    setIsCheckingPin(true);
+    try {
+      const code = quizData.shareCode || quizData.id;
+      const res = await fetch(`/api/quizzes/${code}?forEdit=true`, {
+        headers: { "x-edit-passcode": cleanPin },
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Không thể kiểm tra mã PIN");
+      }
+
+      if (data.quiz?.isOwner) {
+        setIsOwner(true);
+        if (quizData.shareCode) {
+          localStorage.setItem(`quiz_pin_${quizData.shareCode}`, cleanPin);
+        }
+        if (quizData.collectionShareCode) {
+          localStorage.setItem(`collection_pin_${quizData.collectionShareCode}`, cleanPin);
+        }
+        setShowPinModal(false);
+        setPinInput("");
+      } else {
+        setPinError("Mã PIN không chính xác! Vui lòng thử lại.");
+      }
+    } catch (err: any) {
+      setPinError(err.message || "Lỗi kiểm tra mã PIN");
+    } finally {
+      setIsCheckingPin(false);
+    }
+  };
 
   // Bật/tắt âm thanh
   const handleToggleMute = () => {
@@ -238,20 +317,138 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
     return `${m < 10 ? "0" : ""}${m}:${s < 10 ? "0" : ""}${s}`;
   };
 
+  // Modal Mở Khóa Quyền Sửa Đề gắn vào document.body bằng createPortal để có thể hiển thị ở mọi màn hình
+  const pinModalElement = showPinModal && mounted ? createPortal(
+    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-purple-950/30 border border-purple-100 dark:border-purple-900/30 space-y-6 animate-pop">
+        <button
+          type="button"
+          onClick={() => {
+            setShowPinModal(false);
+            setPinError("");
+          }}
+          className="absolute top-4 right-4 p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          title="Đóng hộp thoại"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        <div className="text-center space-y-3">
+          <div className="relative w-14 h-14 mx-auto flex items-center justify-center">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-500 blur-lg opacity-40 animate-pulse" />
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-purple-500/30">
+              <KeyRound className="w-7 h-7" />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <h3 className="font-extrabold text-lg text-slate-900 dark:text-white">
+              Mở Khóa Quyền Sửa Đề
+            </h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+              {quizData.collectionShareCode
+                ? `Nhập mã PIN của đề thi hoặc mã PIN của Bộ đề ${quizData.collectionShareCode} để mở khóa quyền chỉnh sửa.`
+                : "Nhập mã PIN của tác giả để mở khóa quyền chỉnh sửa câu hỏi và đáp án của đề này."}
+            </p>
+          </div>
+
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            {quizData.shareCode && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-[11px] font-mono text-purple-700 dark:text-purple-300">
+                Mã đề: <strong className="font-bold">{quizData.shareCode}</strong>
+              </span>
+            )}
+            {quizData.collectionShareCode && (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-[11px] font-mono text-indigo-700 dark:text-indigo-300">
+                Bộ đề: <strong className="font-bold">{quizData.collectionShareCode}</strong>
+              </span>
+            )}
+          </div>
+        </div>
+
+        <form onSubmit={handleUnlockQuizPin} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1">
+              Mã PIN bí mật
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <Lock className="w-4 h-4" />
+              </div>
+              <input
+                type="text"
+                placeholder="Nhập mã PIN tác giả..."
+                value={pinInput}
+                onChange={(e) => {
+                  setPinInput(e.target.value.toUpperCase());
+                  setPinError("");
+                }}
+                autoFocus
+                maxLength={20}
+                className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-800/80 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-center font-mono text-base font-bold tracking-widest text-slate-900 dark:text-white placeholder:text-slate-400 placeholder:tracking-normal placeholder:font-sans placeholder:font-normal focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-500/10 transition-all uppercase"
+              />
+            </div>
+          </div>
+
+          {pinError && (
+            <div className="flex items-center gap-2 p-3 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/60 rounded-xl text-xs text-rose-600 dark:text-rose-400 animate-pop">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{pinError}</span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowPinModal(false);
+                setPinError("");
+              }}
+              className="flex-1 py-2.5 px-4 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
+            >
+              Hủy bỏ
+            </button>
+            <button
+              type="submit"
+              disabled={isCheckingPin || !pinInput.trim()}
+              className="flex-1 py-2.5 px-4 text-xs font-bold text-white bg-gradient-to-r from-purple-600 via-purple-700 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:-translate-y-0.5 active:translate-y-0 transition-all flex items-center justify-center gap-1.5"
+            >
+              {isCheckingPin ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Đang kiểm tra...</span>
+                </>
+              ) : (
+                <>
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Mở Khóa Quyền Sửa</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body
+  ) : null;
+
   // 1. Màn hình hoàn thành bài thi -> Hiển thị kết quả tổng kết
   if (isCompleted) {
     return (
-      <QuizResult
-        quizTitle={quizData.title}
-        shareCode={quizData.shareCode}
-        totalAnswered={activeQuestions.length}
-        correctCount={correctCount}
-        wrongCount={wrongCount}
-        wrongQuestions={wrongQuestionsList}
-        allQuestions={basePool}
-        onRetryAll={handleRetryAll}
-        onRetryWrongOnly={handleRetryWrongOnly}
-      />
+      <>
+        <QuizResult
+          quizTitle={quizData.title}
+          shareCode={quizData.shareCode}
+          totalAnswered={activeQuestions.length}
+          correctCount={correctCount}
+          wrongCount={wrongCount}
+          wrongQuestions={wrongQuestionsList}
+          allQuestions={basePool}
+          onRetryAll={handleRetryAll}
+          onRetryWrongOnly={handleRetryWrongOnly}
+        />
+        {pinModalElement}
+      </>
     );
   }
 
@@ -260,7 +457,8 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
     const isWrongOnlyMode = !!(initialWrongQuestions && initialWrongQuestions.length > 0);
 
     return (
-      <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-md space-y-6 animate-pop">
+      <>
+        <div className="max-w-xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-8 shadow-md space-y-6 animate-pop">
         {/* Nút bật tắt âm thanh ở góc trên */}
         <div className="flex justify-end">
           <button
@@ -290,14 +488,45 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
               <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-lg text-xs font-mono font-bold text-slate-700 dark:text-slate-300">
                 Mã đề: {quizData.shareCode}
               </span>
-              <Link
-                href={`/quiz/${quizData.shareCode || "DEMO101"}/edit`}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
-                title="Chỉnh sửa câu hỏi và đáp án của đề này"
-              >
-                <Edit3 className="w-3.5 h-3.5" />
-                <span>Sửa đề</span>
-              </Link>
+              {/* Nút Sửa đề: CHỈ HIỂN THỊ KHI ĐÃ LÀ OWNER (Tác giả, Admin hoặc đã mở khóa thành công) */}
+              {isOwner && (
+                <Link
+                  href={`/quiz/${quizData.shareCode || "DEMO101"}/edit`}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/50 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg transition-colors shadow-sm"
+                  title="Chỉnh sửa câu hỏi và đáp án của đề này"
+                >
+                  <Edit3 className="w-3.5 h-3.5" />
+                  <span>Sửa đề</span>
+                </Link>
+              )}
+
+              {/* Nếu chưa là Owner: CẢ ĐỀ LẺ LẪN ĐỀ CON BÊN TRONG BỘ ĐỀ ĐỀU CÓ NÚT "Mở khóa sửa đề" */}
+              {!isOwner && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPinError("");
+                    setShowPinModal(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/60 hover:bg-purple-100 dark:hover:bg-purple-900/50 rounded-lg transition-all border border-purple-200 dark:border-purple-800/80 shadow-sm"
+                  title="Nhập mã PIN của tác giả hoặc mã PIN Bộ đề để mở khóa quyền chỉnh sửa đề này"
+                >
+                  <KeyRound className="w-3.5 h-3.5" />
+                  <span>Mở khóa sửa đề</span>
+                </button>
+              )}
+
+              {/* Nếu là đề con, hiển thị thêm nhãn liên kết Bộ đề cha */}
+              {quizData.collectionShareCode && (
+                <Link
+                  href={`/collection/${quizData.collectionShareCode}`}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-indigo-700 dark:text-indigo-300 bg-indigo-50 dark:indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 rounded-lg transition-all border border-indigo-200 dark:border-indigo-800/80"
+                  title={`Đề thi nhỏ này thuộc Bộ Đề ${quizData.collectionShareCode}. Bấm để xem toàn bộ danh sách đề.`}
+                >
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>Bộ đề: {quizData.collectionShareCode}</span>
+                </Link>
+              )}
               {quizData.canDelete && (
                 <button
                   type="button"
@@ -409,8 +638,10 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
           <ArrowRight className="w-5 h-5" />
         </button>
       </div>
-    );
-  }
+      {pinModalElement}
+    </>
+  );
+}
 
   // 3. Màn hình làm bài trực tiếp & Instant Feedback
   const currentQuestion = activeQuestions[currentIndex];
@@ -561,6 +792,7 @@ export default function QuizRunner({ quizData, initialWrongQuestions }: QuizRunn
           </div>
         )}
       </div>
+      {pinModalElement}
     </div>
   );
 }

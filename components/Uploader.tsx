@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { 
   UploadCloud, 
   FileText, 
@@ -61,6 +61,8 @@ Giải thích: Ngôn ngữ C là ngôn ngữ lập trình thủ tục, không h�
 
 export default function Uploader() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const collectionId = searchParams.get("collectionId");
   const [activeTab, setActiveTab] = useState<"text" | "file">("text");
 
   // Kiểm tra trạng thái đăng nhập
@@ -217,6 +219,7 @@ export default function Uploader() {
           description: description.trim(),
           questions: parsedQuestions,
           isPublic,
+          collectionId: collectionId || undefined,
         }),
       });
 

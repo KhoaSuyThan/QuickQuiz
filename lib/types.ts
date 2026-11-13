@@ -22,7 +22,10 @@ export interface QuizData {
   totalQuestions: number;
   playCount?: number;
   editPasscode?: string; // Mã PIN bảo mật chỉnh sửa
+  hasEditPasscode?: boolean; // Bộ đề có cài đặt mã PIN bảo mật hay không
   isPublic?: boolean; // Trạng thái công khai hay riêng tư
+  collectionId?: string | null;
+  collectionShareCode?: string | null;
   isOwner?: boolean;
   canDelete?: boolean;
   createdAt?: string;
